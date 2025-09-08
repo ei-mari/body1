@@ -162,86 +162,86 @@
     if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
   })();
 
-  /* ====== Data（25文） ====== */
+  /* ====== Data（ご指定の25文に完全一致） ====== */
   const BANK = {
-    A:{topic:'Students should wear school uniforms.',
+    A:{topic:"Students should wear school uniforms.",
       reasons:[
-        {id:'A-r1',text:'they save time in the morning.',tag:'⏱ 朝の時間',exId:'A-ex-iii'},
-        {id:'A-r2',text:'they help us focus on learning.',tag:'🎧 集中',exId:'A-ex-i'},
-        {id:'A-r3',text:'they build school unity.',tag:'🤝 一体感',exId:'A-ex-iii2'},
-        {id:'A-r4',text:'they improve campus safety.',tag:'🛡 安全',exId:'A-ex-iv'},
-        {id:'A-r5',text:'they reduce fashion pressure.',tag:'⚖ 公平',exId:'A-ex-v'},
+        {id:'A-r1',text:"they save time in the morning.",tag:'⏱ 朝の時間',exId:'A-ex-1'},
+        {id:'A-r2',text:"they help us focus on learning.",tag:'🎧 集中',exId:'A-ex-2'},
+        {id:'A-r3',text:"they can build a sense of school unity.",tag:'🤝 一体感',exId:'A-ex-3'},
+        {id:'A-r4',text:"they can improve safety at school.",tag:'🛡 安全',exId:'A-ex-4'},
+        {id:'A-r5',text:"they can reduce pressure to wear trendy clothes.",tag:'⚖ 公平',exId:'A-ex-5'},
       ],
       examples:[
-        {id:'A-ex-i',   text:'we pay attention in class instead of thinking about clothes.'},
-        {id:'A-ex-iii', text:'we don’t waste minutes choosing outfits.'},
-        {id:'A-ex-iii2',text:'we feel like one team when everyone wears the same outfit.'},
-        {id:'A-ex-iv',  text:'teachers can spot strangers quickly.'},
-        {id:'A-ex-v',   text:'we aren’t teased for not wearing brand-name clothes.'},
+        {id:'A-ex-1', text:"we don’t waste minutes choosing outfits."},
+        {id:'A-ex-2', text:"we can concentrate in class instead of thinking about clothes."},
+        {id:'A-ex-3', text:"we feel like one team when everyone wears the same outfit."},
+        {id:'A-ex-4', text:"teachers can more easily spot people who don’t go to our school."},
+        {id:'A-ex-5', text:"we aren’t teased for not wearing brand-name items."},
       ]
     },
-    B:{topic:'Eating vegetables is important.',
+    B:{topic:"Eating vegetables is important.",
       reasons:[
-        {id:'B-r1',text:'they keep our bodies healthy.',tag:'💪 健康',exId:'B-ex-iv'},
-        {id:'B-r2',text:'they give us energy for activities.',tag:'⚡ エネルギー',exId:'B-ex-ii'},
-        {id:'B-r3',text:'their fiber helps digestion.',tag:'🌀 消化',exId:'B-ex-iii'},
-        {id:'B-r4',text:'they support growth with vitamins and minerals.',tag:'📈 成長',exId:'B-ex-i2'},
-        {id:'B-r5',text:'they help prevent illness.',tag:'🛡 免疫',exId:'B-ex-i'},
+        {id:'B-r1',text:"they help keep our bodies healthy.",tag:'💪 健康',exId:'B-ex-4'},
+        {id:'B-r2',text:"they help us have steady energy when we eat them with grains and protein.",tag:'⚡ エネルギー',exId:'B-ex-2'},
+        {id:'B-r3',text:"their fiber helps with digestion.",tag:'🌀 消化',exId:'B-ex-3'},
+        {id:'B-r4',text:"they support growth with vitamins and minerals.",tag:'📈 成長',exId:'B-ex-1a'},
+        {id:'B-r5',text:"they may lower the risk of getting sick.",tag:'🛡 免疫',exId:'B-ex-1'},
       ],
       examples:[
-        {id:'B-ex-i',  text:'we rarely catch colds in winter.'},
-        {id:'B-ex-ii', text:'we feel energetic in P.E. class.'},
-        {id:'B-ex-iii',text:'we don’t get stomachaches after meals.'},
-        {id:'B-ex-iv', text:'we stay strong and balanced.'},
-        {id:'B-ex-i2', text:'we get enough vitamin C to grow well.'},
+        {id:'B-ex-1',  text:"we tend to catch fewer colds in winter."},
+        {id:'B-ex-2',  text:"we feel energetic in P.E. class when we eat vegetables with grains and protein."},
+        {id:'B-ex-3',  text:"we don’t get stomachaches as often after meals."},
+        {id:'B-ex-4',  text:"we stay strong and balanced."},
+        {id:'B-ex-1a', text:"we get enough nutrients such as vitamin C to grow well."},
       ]
     },
-    C:{topic:'Going to bed early is a good habit.',
+    C:{topic:"Going to bed early is a good habit.",
       reasons:[
-        {id:'C-r1',text:'it gives me more energy in the morning.',tag:'⚡ 朝の元気',exId:'C-ex-ii'},
-        {id:'C-r2',text:'it helps me focus at school.',tag:'🎧 集中',exId:'C-ex-i'},
-        {id:'C-r3',text:'it improves my mood.',tag:'😊 機嫌',exId:'C-ex-iii'},
-        {id:'C-r4',text:'it helps my body grow and recover.',tag:'📈 成長',exId:'C-ex-iv'},
-        {id:'C-r5',text:'it keeps me on a regular schedule.',tag:'⏰ 生活リズム',exId:'C-ex-v'},
+        {id:'C-r1',text:"it generally gives me more energy in the morning.",tag:'⚡ 朝の元気',exId:'C-ex-1'},
+        {id:'C-r2',text:"it helps me focus at school.",tag:'🎧 集中',exId:'C-ex-2'},
+        {id:'C-r3',text:"it helps improve my mood.",tag:'😊 機嫌',exId:'C-ex-3'},
+        {id:'C-r4',text:"it helps my body grow and recover.",tag:'📈 成長',exId:'C-ex-4'},
+        {id:'C-r5',text:"it keeps me on a regular schedule.",tag:'⏰ 生活リズム',exId:'C-ex-5'},
       ],
       examples:[
-        {id:'C-ex-i',  text:'I can concentrate during the first period.'},
-        {id:'C-ex-ii', text:'I wake up easily and feel fresh.'},
-        {id:'C-ex-iii',text:"I don't get grumpy over small things."},
-        {id:'C-ex-iv', text:'I recover quickly after practice.'},
-        {id:'C-ex-v',  text:"I'm not late because I sleep and wake at set times."},
+        {id:'C-ex-1', text:"I wake up easily and feel fresh."},
+        {id:'C-ex-2', text:"I can concentrate during the first period."},
+        {id:'C-ex-3', text:"I don’t get grumpy over small things."},
+        {id:'C-ex-4', text:"I recover quickly after practice."},
+        {id:'C-ex-5', text:"I’m not late because I sleep and wake at set times."},
       ]
     },
-    D:{topic:'Using tablets in class is helpful.',
+    D:{topic:"Using tablets in class is helpful.",
       reasons:[
-        {id:'D-r1',text:'it speeds up research.',tag:'🔎 調べる速さ',exId:'D-ex-v'},
-        {id:'D-r2',text:'it organizes our notes.',tag:'🗂 整理',exId:'D-ex-ii'},
-        {id:'D-r3',text:'it makes learning interactive.',tag:'▶︎ インタラクティブ',exId:'D-ex-iii'},
-        {id:'D-r4',text:'it saves paper.',tag:'🌱 環境',exId:'D-ex-iv'},
-        {id:'D-r5',text:'it lets us practice at our own level.',tag:'🎯 個別学習',exId:'D-ex-i2'},
+        {id:'D-r1',text:"tablets can speed up research when internet access is available.",tag:'🔎 調べる速さ',exId:'D-ex-1'},
+        {id:'D-r2',text:"they help us organize and find notes.",tag:'🗂 整理',exId:'D-ex-2'},
+        {id:'D-r3',text:"they can make learning interactive with videos and apps.",tag:'▶︎ インタラクティブ',exId:'D-ex-3'},
+        {id:'D-r4',text:"they reduce daily paper use and can be more eco-friendly day to day.",tag:'🌱 環境',exId:'D-ex-4'},
+        {id:'D-r5',text:"they let us practice at our own level with learning apps.",tag:'🎯 個別学習',exId:'D-ex-5'},
       ],
       examples:[
-        {id:'D-ex-ii', text:'we can search everything in one place.'},
-        {id:'D-ex-iii',text:'we use videos and apps to understand hard ideas.'},
-        {id:'D-ex-iv', text:"we don't need to print many handouts."},
-        {id:'D-ex-v',  text:'we can find information in seconds.'},
-        {id:'D-ex-i2', text:'we do quizzes that match our ability.'},
+        {id:'D-ex-1', text:"we can find information in seconds."},
+        {id:'D-ex-2', text:"we can search everything in one place."},
+        {id:'D-ex-3', text:"we watch a short video to understand tough ideas."},
+        {id:'D-ex-4', text:"we don’t need to print many handouts."},
+        {id:'D-ex-5', text:"we do quizzes that match our ability."},
       ]
     },
-    E:{topic:'Eating breakfast is important.',
+    E:{topic:"Eating breakfast is important.",
       reasons:[
-        {id:'E-r1',text:'it gives me energy to start the day.',tag:'⚡ エネルギー',exId:'E-ex-ii'},
-        {id:'E-r2',text:'it helps me focus in morning classes.',tag:'🎧 集中',exId:'E-ex-i'},
-        {id:'E-r3',text:'it keeps my mood stable.',tag:'🙂 機嫌',exId:'E-ex-iii'},
-        {id:'E-r4',text:'it keeps my blood sugar steady.',tag:'💪 健康',exId:'E-ex-iv'},
-        {id:'E-r5',text:'it prevents overeating later.',tag:'🍽 食べ過ぎ防止',exId:'E-ex-v'},
+        {id:'E-r1',text:"it helps me feel energized to start the day.",tag:'⚡ エネルギー',exId:'E-ex-1'},
+        {id:'E-r2',text:"it helps me focus in morning classes.",tag:'🎧 集中',exId:'E-ex-2'},
+        {id:'E-r3',text:"it helps keep my mood more steady.",tag:'🙂 機嫌',exId:'E-ex-3'},
+        {id:'E-r4',text:"it can help keep my blood sugar steadier, depending on what I eat.",tag:'💪 健康',exId:'E-ex-4'},
+        {id:'E-r5',text:"it can help many people avoid overeating later.",tag:'🍽 食べ過ぎ防止',exId:'E-ex-5'},
       ],
       examples:[
-        {id:'E-ex-i', text:'I can listen well in the first period.'},
-        {id:'E-ex-ii',text:'I feel awake in the morning.'},
-        {id:'E-ex-iii',text:"I don't get angry just because I'm hungry."},
-        {id:'E-ex-iv',text:"I don't feel dizzy before P.E."},
-        {id:'E-ex-v', text:"I don't eat too many snacks after school."},
+        {id:'E-ex-1', text:"I feel awake in the morning."},
+        {id:'E-ex-2', text:"I can listen well in the first period."},
+        {id:'E-ex-3', text:"I don’t get angry just because I’m hungry."},
+        {id:'E-ex-4', text:"I don’t feel dizzy before P.E."},
+        {id:'E-ex-5', text:"I don’t eat too many snacks after school."},
       ]
     }
   };
@@ -256,6 +256,7 @@
     '⚖ 公平':'観点：公平性（流行やブランドの圧を下げる）',
     '💪 健康':'観点：健康（体調の安定・病気予防）',
     '⚡ エネルギー':'観点：エネルギー（活動のための力）',
+    '⚡ 朝の元気':'観点：エネルギー（活動のための力）', /* C-1 用に追加 */
     '🌀 消化':'観点：消化（お腹の調子・負担の軽さ）',
     '📈 成長':'観点：成長・回復（体づくり・休養）',
     '🛡 免疫':'観点：免疫（かぜをひきにくい）',
@@ -276,6 +277,7 @@
     '⚖ 公平':'「服の違いで比べられにくい」ことが読み取れる？',
     '💪 健康':'「体調が安定する／病気をへらす」根拠になっている？',
     '⚡ エネルギー':'「活動のエネルギーが出る」ことにつながっている？',
+    '⚡ 朝の元気':'「活動のエネルギーが出る」ことにつながっている？',
     '🌀 消化':'「お腹の負担が軽くなる／調子が良い」を示している？',
     '📈 成長':'「体づくりや回復」に関係がある？',
     '🛡 免疫':'「かぜをひきにくい」理由として自然？',
@@ -385,7 +387,7 @@
     $('#exampleMsg').textContent='';
   }
 
-  /* できた文（下）：トピック先頭小文字化＋太字＋二重ピリオド防止 */
+  /* できた文（下）：トピック先頭小文字化＋太字＋終止調整 */
   function updatePreview(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
@@ -490,7 +492,7 @@
       document.querySelectorAll('#exampleArea .chip').forEach(b=>b.disabled=true);
       updateCopyBox(); renderJumpList();
     }else{
-      // —— デザート味：観点ヒント + 2回目以降は問いかけ。ラベル（絵文字つき）も明示
+      // —— 観点ヒント + 2回目以降は問いかけ。ラベル（絵文字つき）も明示
       q._exTries = (q._exTries || 0) + 1;
       const current  = bank.reasons.find(r=>r.id===q.pickedReason);
       const belongTo = bank.reasons.find(r=>r.exId===q.pickedExample); // 選んだ例が属する理由
@@ -558,7 +560,6 @@
   if(tts.supported){
     ttsBtn.addEventListener('click', ()=>{ if(!speechSynthesis.speaking){ tts.speak(previewPlainText()); } else { tts.stop(); } });
     $('#rate').addEventListener('input', ()=>{ if(speechSynthesis.speaking){ tts.speak(previewPlainText()); } });
-    // 一部ブラウザで声リストが遅延する対策
     if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged === null) {
       speechSynthesis.onvoiceschanged = () => {};
     }
