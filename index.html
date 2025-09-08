@@ -9,35 +9,45 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Noto Sans JP", Helvetica, Arial, sans-serif; background:var(--bg); color:var(--ink); }
-    .container{max-width: 900px; margin:0 auto; padding: clamp(16px, 3vw, 28px);}
+    .container{max-width: 900px; margin:0 auto; padding: clamp(16px, 3vw, 28px);} 
+
     header{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px}
     h1{font-size: clamp(20px, 4.6vw, 28px); margin:0; letter-spacing:.2px}
     .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    button{ border:0; background:var(--accent); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow: 0 1px 0 rgba(0,0,0,.08);}
+    button{ border:0; background:var(--accent); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow: 0 1px 0 rgba(0,0,0,.08);} 
     button.secondary{background:#e5e7eb; color:#111827}
     button.ghost{background:transparent; color:var(--accent); padding:8px 10px}
     button.ok{background:var(--ok)}
     button.bad{background:var(--bad)}
     button:focus{outline:2px solid var(--ring); outline-offset:2px}
+
     select{ padding:8px 10px; border:1px solid #e5e7eb; border-radius:10px; background:#fff; }
-    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 8px 24px rgba(2,6,23,.06);}
+
+    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 8px 24px rgba(2,6,23,.06);} 
     .muted{color:var(--muted)}
     .hr{height:1px; background:#e5e7eb; margin:16px 0}
+
     .row{display:grid; gap:10px}
     .topic{font-weight:700; font-size:18px;}
     .badge{display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:4px 10px; border-radius:999px; font-size:12px}
+
     .choice-wrap{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px; cursor:pointer; background:#fff; transition:all .15s ease}
+    .chip{padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px; cursor:pointer; background:#fff; transition:all .15s ease; color:var(--ink);} 
     .chip[disabled]{opacity:.55; cursor:not-allowed}
     .chip.ok{background:#dcfce7; border-color:#86efac}
     .chip.bad{background:#fee2e2; border-color:#fecaca}
+
     .preview{background:#f1f5f9; border-radius:12px; padding:12px; font-size:15px}
     .preview b{color:#0f172a}
+
     .footer{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:10px}
+
     .result{display:flex; align-items:center; gap:8px; font-weight:700}
     .result.ok{ color:var(--ok)}
     .result.bad{ color:var(--bad)}
+
     .copy-area{white-space:pre-wrap; background:#0b1020; color:#e2e8f0; padding:12px; border-radius:12px; font-size:14px}
+
     @media print{
       header, .toolbar, .footer { display:none !important; }
       body{ background:#fff; }
@@ -105,9 +115,9 @@
     // ====== Config ======
     const CONFIG = {
       questionCount: 3,
-      ui: 'buttons',             // 'buttons' | 'dropdown'（?ui=dropdown でも切替可）
-      topicMode: 'auto',         // 'auto' | 'preset'
-      presetTopics: ['A','C','E']
+      ui: 'buttons', // 'buttons' | 'dropdown'（切替したい場合はここ or URL ?ui=dropdown）
+      topicMode: 'auto', // 'auto' | 'preset'
+      presetTopics: ['A','C','E'],
     };
 
     // URLの ?topics=A,C,E でプリセット出題、?ui=dropdown でプルダウンUI
@@ -158,6 +168,7 @@
     const $ = sel => document.querySelector(sel);
     const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
     const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
+    const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
     function sampleDistinct(arr, n){ const copy=[...arr]; const out=[]; while(out.length<n && copy.length){ out.push(copy.splice(Math.floor(Math.random()*copy.length),1)[0]); } return out; }
 
     // ====== State ======
@@ -168,6 +179,7 @@
       if(CONFIG.topicMode==='preset'){
         picks = CONFIG.presetTopics.slice(0, CONFIG.questionCount);
         if(picks.length < CONFIG.questionCount){
+          // 補完：足りない分は残りからランダム
           const rest = ['A','B','C','D','E'].filter(k=>!picks.includes(k));
           picks = picks.concat(sampleDistinct(rest, CONFIG.questionCount-picks.length));
         }
@@ -186,8 +198,11 @@
       $('#score').textContent = state.score;
       $('#topicText').textContent = topics.find(t=>t.key===q.topic).text;
 
+      // 理由 UI
       renderReasonUI(q);
+      // 例 UI
       renderExampleUI(q);
+      // プレビュー
       updatePreview();
 
       $('#result').className = 'result muted';
@@ -245,10 +260,13 @@
 
     function updatePreview(){
       const q = state.questions[state.step];
-      const t = topics.find(x=>x.key===q.topic).text;
-      const r = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
+      const t0 = topics.find(x=>x.key===q.topic).text;
+      const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
       const ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
-      const s1 = ensurePeriod(`First, ${t} because ${r}`);
+      const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
+      const s2 = ensurePeriod(`For example, ${ex}`);
+      $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
+    } because ${r}`);
       const s2 = ensurePeriod(`For example, ${ex}`);
       $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
     }
@@ -263,7 +281,7 @@
         q.reasonCorrect = true; markAll($('#reasonArea'), 'ok');
         $('#reasonMsg').className = 'result ok';
         $('#reasonMsg').textContent = '✅ 正解！次は「たとえば」を選ぼう';
-        renderExampleUI(q);
+        renderExampleUI(q); // 解放
       }else{
         if(node && node.classList) node.classList.add('bad');
         $('#reasonMsg').className = 'result bad';
@@ -318,11 +336,33 @@
         const t = topics.find(x=>x.key===q.topic).text;
         const r = reasons.find(x=>x.key===q.pickedReason).text;
         const ex = examples.find(x=>x.key===q.pickedExample).text;
-        const s1 = ensurePeriod(`First, ${t} because ${r}`);
+        const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
         const s2 = ensurePeriod(`For example, ${ex}`);
-        return `Q${i+1}\n${s1}\n${s2}`;
+        return `Q${i+1}
+${s1}
+${s2}`;
       }).filter(Boolean);
-      $('#answers').textContent = texts.join('\n\n');
+      $('#answers').textContent = texts.join('
+
+');
+    } because ${r}`);
+        const s2 = ensurePeriod(`For example, ${ex}`);
+        return `Q${i+1}
+${s1}
+${s2}`;
+      }).filter(Boolean);
+      $('#answers').textContent = texts.join('
+
+');
+    } because ${r}`);
+        const s2 = ensurePeriod(`For example, ${ex}`);
+        return `Q${i+1}
+${s1}
+${s2}`;
+      }).filter(Boolean);
+      $('#answers').textContent = texts.join('
+
+');
     }
 
     function resetAll(){ initQuestions(); render(); updateAnswersBox(); }
