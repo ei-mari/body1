@@ -34,7 +34,6 @@
   .chip.bad.flash{background:#fee2e2;border-color:#fecaca}
   .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
   .tts{display:flex;align-items:center;gap:8px;margin-top:6px}
-  .tts .tiny{background:#e5e7eb !important;color:#111827 !important;padding:6px 10px;border-radius:999px}
   .progress{height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .25s ease}
   .footer{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
@@ -42,12 +41,10 @@
   .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
   details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
 
-  /* ===== Lean（集中）モード ===== */
-  body.lean .steps, body.lean #reasonMsg, body.lean #exampleMsg, body.lean #btn-randTopic, body.lean .badge{display:none!important}
-  body.lean .row{gap:8px}
-  #reasonSummary{display:none;align-items:center;gap:8px}
-  #reasonSummary .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
-  #reasonSummary button{background:transparent;color:var(--accent);padding:4px 6px;border-radius:8px}
+  /* STEP1の答え要約（STEP2ヘッダの下に出す） */
+  .summary-line{display:none;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px}
+  .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .summary-line button{background:transparent;color:var(--accent);padding:4px 6px;border-radius:8px}
   @media (min-width:760px){ .chip{padding:12px 14px} }
   @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
@@ -90,14 +87,17 @@
       <div id="reasonMsg" class="muted">タップして選択</div>
     </div>
 
-    <!-- STEP1 summary（Lean時に表示） -->
-    <div id="reasonSummary" class="row">
-      <div><span class="tag">✓ 理由</span> <span id="reasonPickedText"></span> <button id="btn-edit-reason">変更</button></div>
-    </div>
-
     <!-- STEP2 -->
     <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
       <div style="font-weight:700">STEP 2｜その理由に合う たとえば（i〜v）を選ぼう</div>
+
+      <!-- ここに STEP1 の要約を表示 -->
+      <div id="reasonSummary" class="summary-line">
+        <span class="tag">✓ 理由</span>
+        <span id="reasonPickedText"></span>
+        <button id="btn-edit-reason" title="理由を変更">変更</button>
+      </div>
+
       <div id="exampleArea" class="choice-wrap"></div>
       <div id="exampleMsg" class="muted">タップして選択</div>
     </div>
@@ -106,7 +106,7 @@
     <div class="row" style="margin-top:10px">
       <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
       <div class="tts">
-        <button id="btn-tts" class="tiny">🔊 読む</button>
+        <button id="btn-tts" class="secondary">🔊 読む</button>
         <details><summary>オプション（速度）</summary>
           <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
         </details>
@@ -133,13 +133,11 @@
 </div>
 
 <script>
-  // ====== Config / Lean flag ======
+  // ====== Config ======
   const CONFIG = { questionCount: 3, topicMode: 'auto', presetTopics: ['A','C','E'] };
-  const SP = new URLSearchParams(location.search);
-  const LEAN = SP.get('lean') === '1';
-  if(LEAN) document.body.classList.add('lean');
   (function(){
-    const m = SP.get('topics');
+    const sp = new URLSearchParams(location.search);
+    const m = sp.get('topics');
     if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
   })();
 
@@ -166,6 +164,7 @@
     { key:'iv', text:'I don’t get sick often.' },
     { key:'v',  text:'We can look up information in seconds.' }
   ];
+  // E は 2,4
   const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
   const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
 
@@ -207,7 +206,7 @@
     renderExampleUI(q);
     updatePreview();
     updatePills();
-    updateLeanUI();
+    updateStepVisibility();
 
     $('#result').className = 'muted';
     $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
@@ -259,18 +258,19 @@
     p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
-  // ====== Lean UI ======
-  function updateLeanUI(){
-    if(!LEAN) return;
+  // ====== STEP1 を隠し、要約を STEP2 に表示 ======
+  function updateStepVisibility(){
     const q = state.questions[state.step];
+    const rb = $('#reasonBlock');
     const sum = $('#reasonSummary');
     if(q.reasonCorrect){
+      rb.style.display = 'none';
       $('#reasonPickedText').textContent = reasons.find(x=>x.key===q.pickedReason).text;
       sum.style.display = 'flex';
-      $('#reasonBlock').style.display = 'none';
+      $('#exampleBlock').style.display = 'grid';
     }else{
+      rb.style.display = 'grid';
       sum.style.display = 'none';
-      $('#reasonBlock').style.display = 'grid';
     }
   }
   $('#btn-edit-reason').addEventListener('click', ()=>{
@@ -293,13 +293,14 @@
       $('#reasonMsg').className = 'result ok';
       $('#reasonMsg').textContent = '✅ 正解！つづいて「たとえば」を選ぼう';
       renderExampleUI(q);
+      updateStepVisibility();
       setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
     } else {
       flashBad(chip);
       $('#reasonMsg').className = 'result bad';
       $('#reasonMsg').textContent = '❌ このトピックには合わないよ。もう一度！';
     }
-    updatePreview(); updatePills(); updateLeanUI();
+    updatePreview(); updatePills();
   }
 
   function onPickExample(key, chip){
@@ -327,7 +328,7 @@
 
   function next(){
     if(state.step < state.questions.length-1){ state.step++; render(); }
-    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); updateLeanUI(); }
+    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); }
   }
 
   function randomizeTopic(){
