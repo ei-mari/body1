@@ -40,12 +40,12 @@
   .result{font-weight:700}.result.ok{color:var(--ok)}.result.bad{color:var(--bad)}
   .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
   details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
-
-  /* 理由+STEP2をひとつの枠に */
+  /* 理由+STEP2をひと枠に */
   .reason-group{display:none;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
   .summary-line{display:flex;align-items:center;gap:10px}
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
   .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
+  .okwrap{display:none;align-items:center;gap:10px;margin-top:6px}
   @media (min-width:760px){ .chip{padding:12px 14px} }
   @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
@@ -83,27 +83,30 @@
 
     <!-- STEP1 -->
     <div id="reasonBlock" class="row" style="margin-top:4px">
-      <div style="font-weight:700">STEP 1｜理由（1〜5）を選ぼう</div>
+      <div style="font-weight:700">STEP 1｜理由を選んで、適切な <u>TOPIC SENTENCE</u> を作ろう。</div>
       <div id="reasonArea" class="choice-wrap"></div>
-      <div id="reasonMsg" class="muted">タップして選択</div>
+      <div id="reasonMsg" class="muted"></div>
     </div>
 
     <!-- 理由＋STEP2 を一体化 -->
     <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
       <div id="reasonGroup" class="reason-group">
         <div id="reasonSummary" class="summary-line">
-          <span class="tag">✓ 理由</span>
-          <span id="reasonPickedText"></span>
+          <span class="tag">✓ 理由</span><span id="reasonPickedText"></span>
         </div>
         <div class="subhead">STEP 2｜この理由に合う <span style="text-decoration:underline">たとえば</span> を選ぼう</div>
         <div id="exampleArea" class="choice-wrap"></div>
       </div>
-      <div id="exampleMsg" class="muted">タップして選択</div>
+      <div id="exampleMsg" class="muted"></div>
     </div>
 
     <!-- Preview & TTS -->
     <div class="row" style="margin-top:10px">
-      <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
+      <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.</div>
+      <div class="okwrap" id="okWrap">
+        <span class="muted">これでいい？</span>
+        <button id="btn-ok" class="primary" disabled>OK（STEP 2へ）</button>
+      </div>
       <div class="tts">
         <button id="btn-tts" class="secondary">🔊 読む</button>
         <details><summary>オプション（速度）</summary>
@@ -155,7 +158,6 @@
     { key:'4', text:'it keeps us healthy.' },
     { key:'5', text:'it speeds up research.' },
   ];
-  // 例文（少しレベルUP）
   const examples = [
     { key:'i',  text:'I can stay focused in class.' },
     { key:'ii', text:'I feel more awake in the morning.' },
@@ -165,8 +167,6 @@
   ];
   const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
   const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
-
-  // ヒント用メタ
   const reasonMeta = {
     '1': {tag:'🎧 集中'}, '2': {tag:'⚡ 元気'}, '3': {tag:'⏱ 朝の時間'},
     '4': {tag:'💪 健康'}, '5': {tag:'🔎 調べる速さ'}
@@ -204,7 +204,7 @@
     } else {
       picks = sampleDistinct(['A','B','C','D','E'], CONFIG.questionCount);
     }
-    state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, _scored:false }));
+    state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, confirmedStep1:false, _scored:false }));
     state.step = 0; state.score = 0;
   }
 
@@ -237,12 +237,12 @@
       wrap.appendChild(chip);
     });
     $('#reasonMsg').className = 'muted';
-    $('#reasonMsg').textContent = 'タップして選択';
+    $('#reasonMsg').textContent = '';
   }
 
   function renderExampleUI(q){
     const block = $('#exampleBlock'), wrap = $('#exampleArea'); wrap.innerHTML='';
-    if(!q.reasonCorrect){ block.style.display='none'; return; }
+    if(!q.confirmedStep1){ block.style.display='none'; return; }  // ← OK押下後に開く
     block.style.display='grid';
     examples.forEach(ex=>{
       const chip = el('button','chip'); chip.type='button';
@@ -252,35 +252,48 @@
       wrap.appendChild(chip);
     });
     $('#exampleMsg').className = 'muted';
-    $('#exampleMsg').textContent = 'タップして選択';
+    $('#exampleMsg').textContent = '';
   }
 
+  // ====== PREVIEW：STEP1=1文のみ／STEP2で2文目を表示 ======
   function updatePreview(){
     const q = state.questions[state.step];
     const t0 = topics.find(x=>x.key===q.topic).text;
     const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
-    let ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
     const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
-    const s2 = ensurePeriod(`For example, ${ex}`);
-    $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
+    let html = `<b>Preview:</b><br>${s1}`;
+    if(q.confirmedStep1){ // STEP2に入ったら 2文目を出す（未選択なら —）
+      const ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
+      const s2 = ensurePeriod(`For example, ${ex}`);
+      html += `<br>${s2}`;
+    }
+    $('#preview').innerHTML = html;
+
+    // OKボタンの表示/制御
+    const okw = $('#okWrap'), okbtn = $('#btn-ok');
+    if(q.reasonCorrect && !q.confirmedStep1){
+      okw.style.display = 'flex'; okbtn.disabled = false;
+    } else {
+      okw.style.display = 'none'; okbtn.disabled = true;
+    }
   }
 
   // ====== STEP pills ======
   function updatePills(){
     const q = state.questions[state.step];
     const p1 = $('#pill-step1'), p2 = $('#pill-step2'), p3 = $('#pill-preview');
-    p1.className = 'pill ' + (q.reasonCorrect ? 'done' : 'active');
-    p2.className = 'pill ' + (q.reasonCorrect ? (q.exampleCorrect ? 'done' : 'active') : '');
+    p1.className = 'pill ' + (q.confirmedStep1 ? 'done' : 'active');
+    p2.className = 'pill ' + (q.confirmedStep1 ? (q.exampleCorrect ? 'done' : 'active') : '');
     p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
-  // ====== 可視制御（STEP1を隠し、理由の下にSTEP2） ======
+  // ====== 可視制御（STEP1を隠すのはOK押下後） ======
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const rb = $('#reasonBlock');
     const grp = $('#reasonGroup');
     const sum = $('#reasonSummary');
-    if(q.reasonCorrect){
+    if(q.confirmedStep1){
       rb.style.display = 'none';
       $('#reasonPickedText').textContent =
         reasons.find(x=>x.key===q.pickedReason).text + `（${reasonMeta[q.pickedReason].tag}）`;
@@ -315,10 +328,7 @@
       $('#reasonArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
       chip.classList.add('ok','selected');
       $('#reasonMsg').className = 'result ok';
-      $('#reasonMsg').textContent = `✅ 正解！ ${topicWhy[q.topic]}`;
-      renderExampleUI(q);
-      updateStepVisibility();
-      setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
+      $('#reasonMsg').textContent = `✅ 正解！PreviewでTOPIC SENTENCEを確認してOKを押そう`;
     } else {
       flashBad(chip);
       $('#reasonMsg').className = 'result bad';
@@ -350,6 +360,15 @@
     updatePreview(); updatePills();
   }
 
+  // OK（STEP2へ）
+  $('#btn-ok').addEventListener('click', ()=>{
+    const q = state.questions[state.step];
+    if(!q.reasonCorrect) return;
+    q.confirmedStep1 = true;
+    updateStepVisibility(); updatePreview(); updatePills();
+    setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
+  });
+
   function next(){
     if(state.step < state.questions.length-1){ state.step++; render(); }
     else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); }
@@ -359,7 +378,7 @@
     const q = state.questions[state.step];
     const pool = ['A','B','C','D','E'].filter(k=>k!==q.topic);
     q.topic = pool[Math.floor(Math.random()*pool.length)];
-    q.pickedReason=null; q.pickedExample=null; q.reasonCorrect=false; q.exampleCorrect=false; q._scored=false;
+    q.pickedReason=null; q.pickedExample=null; q.reasonCorrect=false; q.exampleCorrect=false; q.confirmedStep1=false; q._scored=false;
     render();
   }
 
