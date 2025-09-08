@@ -35,26 +35,22 @@
 
   .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
   .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
-  .tts small{color:var(--muted)}
   .progress{height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .25s ease}
   .footer{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
   .result{font-weight:700}.result.ok{color:var(--ok)}.result.bad{color:var(--bad)}
   .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
   details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
-
-  /* 理由+STEP2をひと枠に */
   .reason-group{display:none;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
   .summary-line{display:flex;align-items:center;gap:10px}
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
   .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
 
-  /* かわいい見出し（罫線＋STEPバッジ） */
+  /* 見出し：罫線でかわいく */
   .topic-head{display:grid;gap:6px;margin-top:6px}
   .topic-title{font-weight:800;font-size:22px}
   .topic-subline{display:flex;align-items:center;gap:8px;color:#334155;font-weight:700}
   .topic-subline::before,.topic-subline::after{content:"";flex:1;height:1.5px;background:#e5e7eb;border-radius:999px}
-  .topic-step-badge{background:#fde68a;color:#7c2d12;border-radius:999px;padding:2px 8px;font-weight:800;font-size:12px}
 
   .okwrap{display:none;align-items:center;gap:10px;margin-top:10px}
 
@@ -82,19 +78,18 @@
 
     <div class="hr"></div>
 
-    <!-- STEPインジケータ -->
+    <!-- ステップ表示 -->
     <div class="steps">
       <span class="pill" id="pill-step1">STEP 1: 理由</span>
       <span class="pill" id="pill-step2">STEP 2: たとえば</span>
       <span class="pill" id="pill-preview">🔊 Preview</span>
     </div>
 
-    <!-- かわいい見出し -->
+    <!-- 見出し -->
     <div class="topic-head">
       <div class="topic-title" id="topicText"></div>
       <div class="topic-subline">
-        <span class="topic-step-badge">STEP 1</span>
-        <span>理由を選んで、適切な <u>TOPIC SENTENCE</u> を作ろう。</span>
+        <span>正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span>
       </div>
     </div>
 
@@ -116,9 +111,9 @@
       <div id="exampleMsg" class="muted"></div>
     </div>
 
-    <!-- Preview（読み上げは文の直下） -->
+    <!-- Preview（TTSは文の直下） -->
     <div class="row" style="margin-top:10px">
-      <div class="preview" id="preview">
+      <div class="preview">
         <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
         <div class="preview-actions">
           <button id="btn-tts" class="secondary">🔊 読む</button>
@@ -284,7 +279,7 @@
     $('#exampleMsg').textContent = '';
   }
 
-  // ====== PREVIEW：STEP1=1文／STEP2で2文目
+  // PREVIEW：STEP1=1文／STEP2で2文目
   function updatePreview(){
     const q = state.questions[state.step];
     const t0 = topics.find(x=>x.key===q.topic).text;
@@ -298,7 +293,7 @@
     document.getElementById('previewText').innerHTML = html;
   }
 
-  // ====== STEP pills ======
+  // STEP pills
   function updatePills(){
     const q = state.questions[state.step];
     const p1 = document.getElementById('pill-step1');
@@ -309,7 +304,7 @@
     p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
-  // ====== 可視制御 ======
+  // 可視制御
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const rb = document.getElementById('reasonBlock');
@@ -329,7 +324,7 @@
     }
   }
 
-  // ====== まとめ（コピー用） ======
+  // まとめ（コピー用）
   function updateAnswersBox(){
     const texts = state.questions.map((q,i)=>{
       if(!(q.reasonCorrect && q.exampleCorrect)) return null;
@@ -343,7 +338,7 @@
     document.getElementById('answers').textContent = texts.join('\n\n');
   }
 
-  // ====== 説明文 ======
+  // 説明文
   function flashBad(node){ node.classList.add('bad','flash'); setTimeout(()=>node.classList.remove('flash'), 600); }
   function explainWrongReason(topicKey, chosenReasonKey){
     const correctTags = (correctReasonsByTopic[topicKey]||[]).map(k=>reasonMeta[k].tag).join(' / ');
@@ -354,7 +349,7 @@
     return `その例は「${reasonMeta[exBelongsTo].tag}」の話。今の理由は「${reasonMeta[pickedReasonKey].tag}」。つながっていないね。ヒント：例）${altExample[pickedReasonKey]}`;
   }
 
-  // ====== Handlers ======
+  // Handlers
   function confirmStep1(){
     const q = state.questions[state.step];
     if(!q.pickedReason) return;
@@ -365,6 +360,8 @@
       document.getElementById('reasonMsg').className = 'result ok';
       document.getElementById('reasonMsg').textContent = '✅ 正解！STEP 2 へ進もう';
       updateStepVisibility();
+      renderExampleUI(q); // ← OK後にSTEP2の選択肢を描画
+      setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 30);
     }else{
       q.reasonCorrect = false;
       q.confirmedStep1 = false;
