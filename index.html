@@ -44,7 +44,7 @@
   .topic-subline{display:flex;align-items:center;gap:8px;color:#334155;font-weight:700}
   .topic-subline::before,.topic-subline::after{content:"";flex:1;height:1.5px;background:#e5e7eb;border-radius:999px}
 
-  /* Preview（下に配置） */
+  /* Preview（下） */
   .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px;margin-top:6px}
   .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
   .btn-icon{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;background:#e5e7eb;color:#111827}
@@ -57,12 +57,10 @@
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
   .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
 
-  /* まとめのチェックリスト */
-  .ans-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;justify-content:space-between}
-  .ans-left{display:flex;align-items:center;gap:10px}
-  .ans-item.disabled{opacity:.6}
-  .ans-title{font-weight:700}
-  .ans-note{color:var(--muted);font-size:12px}
+  /* まとめ（ジャンプボタン） */
+  .jumpbtn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 12px;border-radius:12px;background:#eef2ff;color:#1e293b;border:1px solid #dbeafe;cursor:pointer}
+  .tag-ok{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+  .tag-ng{background:#fee2e2;color:#7f1d1d;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
 
   @media print{ header,.toolbar,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
@@ -115,7 +113,7 @@
       <div id="exampleMsg" class="muted"></div>
     </div>
 
-    <!-- Preview（下）＋ OKボタン群 -->
+    <!-- Preview（下）＋ OK & 次へ -->
     <div class="row" id="previewBlock">
       <div class="preview">
         <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
@@ -133,7 +131,10 @@
       </div>
       <div class="okwrap" id="okWrap2">
         <span class="muted">答え合わせ：</span>
-        <button id="btn-ok2" class="primary" disabled>OK（次へ）</button>
+        <button id="btn-ok2" class="primary" disabled>OK</button>
+      </div>
+      <div class="okwrap" id="nextWrap">
+        <button id="btn-next" class="secondary">次の問題へ →</button>
       </div>
       <div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div>
     </div>
@@ -141,14 +142,13 @@
 
   <div class="hr"></div>
 
-  <!-- まとめ：チェックで選んでコピー／表示 -->
+  <!-- まとめ：ジャンプボタン + 完成分コピー -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div style="font-weight:700">📜 まとめ</div>
-      <button id="btn-copy" class="secondary">📋 コピー</button>
+      <button id="btn-copy" class="secondary">📋 完成分をコピー</button>
     </div>
-    <div class="muted" style="margin:.25rem 0 .5rem">コピーしたい問題にチェック✔︎（「表示」でその問題を再表示）</div>
-    <div id="answersList" class="row"></div>
+    <div id="jumpList" class="row" style="margin-top:6px"></div>
     <div id="answers" class="copy-area" aria-live="polite"></div>
   </div>
 </div>
@@ -258,9 +258,10 @@
   const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
   const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
+  function escapeHTML(s){ return String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
 
   /* ====== State ====== */
-  const state = { step:0, questions:[], score:0, selectedForCopy:{} };
+  const state = { step:0, questions:[], score:0 };
 
   function initQuestions(){
     let picks;
@@ -278,7 +279,7 @@
       reasonCorrect:false, exampleCorrect:false,
       confirmedStep1:false, _scored:false
     }));
-    state.step = 0; state.score = 0; state.selectedForCopy = {};
+    state.step = 0; state.score = 0;
   }
 
   /* ====== Render ====== */
@@ -297,7 +298,8 @@
     updatePills();
     updateStepVisibility();
     updateOkButtons();
-    renderAnswersList();
+    renderJumpList();
+    updateCopyBox();
 
     $('#result').className='muted';
     $('#result').textContent='STEP 1 → STEP 2 の順に完成させよう';
@@ -337,7 +339,7 @@
         q.pickedExample = ex.id;
         $('#exampleArea').querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
         chip.classList.add('selected');
-        $('#exampleMsg').textContent=''; // まだ判定しない
+        $('#exampleMsg').textContent=''; // ここでは判定しない
         updatePreview(); updateOkButtons();
       });
       wrap.appendChild(chip);
@@ -345,27 +347,21 @@
     $('#exampleMsg').textContent='';
   }
 
-  /* PREVIEW（下）：選択部分を太字に */
+  /* PREVIEW（下）：選択部分を太字 */
   function updatePreview(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
-
     const t0 = bank.topic;
     const rObj = q.pickedReason ? bank.reasons.find(x=>x.id===q.pickedReason) : null;
     const rTxt = rObj ? `<b>${escapeHTML(rObj.text)}</b>` : '—';
     const s1 = `First, ${escapeHTML(cleanEnd(t0))} because ${rTxt}`;
     let html = `<b>Preview:</b><br>${ensurePeriod(s1)}`;
-
     if(q.confirmedStep1){
       const exObj = q.pickedExample ? bank.examples.find(x=>x.id===q.pickedExample) : null;
       const exTxt = exObj ? `<b>${escapeHTML(exObj.text)}</b>` : '—';
       html += `<br>${ensurePeriod(`For example, ${exTxt}`)}`;
     }
     $('#previewText').innerHTML = html;
-  }
-
-  function escapeHTML(s){
-    return String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
   }
 
   /* STEP pills */
@@ -393,28 +389,19 @@
     }
   }
 
-  /* まとめ：チェックリスト */
-  function renderAnswersList(){
-    const box = $('#answersList'); box.innerHTML = '';
+  /* まとめ：ジャンプボタンとコピー（完成分のみ） */
+  function renderJumpList(){
+    const box = $('#jumpList'); box.innerHTML = '';
     state.questions.forEach((q,i)=>{
       const bank = BANK[q.topic];
-      const row = el('div','ans-item'+(q.exampleCorrect?'':' disabled'));
-      const left = el('label','ans-left');
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.disabled=!q.exampleCorrect;
-      cb.checked = !!state.selectedForCopy[i];
-      cb.addEventListener('change', ()=>{ state.selectedForCopy[i]=cb.checked; updateAnswersText(); });
-      const title = el('span','ans-title'); title.textContent = `Q${i+1}`;
-      const note = el('span','ans-note'); note.textContent = bank.topic;
-      left.appendChild(cb); left.appendChild(title); left.appendChild(note);
-      const showBtn = el('button','secondary slim'); showBtn.textContent='表示';
-      showBtn.addEventListener('click', ()=>{
-        state.step = i; render();
-        document.getElementById('quiz').scrollIntoView({behavior:'smooth', block:'start'});
-      });
-      row.appendChild(left); row.appendChild(showBtn);
-      box.appendChild(row);
+      const btn = el('button','jumpbtn');
+      const left = el('span'); left.textContent = `Q${i+1}: ${bank.topic}`;
+      const right = el('span', q.exampleCorrect?'tag-ok':'tag-ng');
+      right.textContent = q.exampleCorrect ? '完成' : '未完成';
+      btn.appendChild(left); btn.appendChild(right);
+      btn.addEventListener('click', ()=>{ state.step=i; render(); document.getElementById('quiz').scrollIntoView({behavior:'smooth', block:'start'}); });
+      box.appendChild(btn);
     });
-    updateAnswersText();
   }
   function buildAnswerText(q,i){
     const bank = BANK[q.topic];
@@ -424,13 +411,9 @@
     const s2 = ensurePeriod(`For example, ${ex}`);
     return `Q${i+1}\n${s1}\n${s2}`;
   }
-  function updateAnswersText(){
+  function updateCopyBox(){
     const parts=[];
-    state.questions.forEach((q,i)=>{
-      if(state.selectedForCopy[i] && q.reasonCorrect && q.exampleCorrect){
-        parts.push(buildAnswerText(q,i));
-      }
-    });
+    state.questions.forEach((q,i)=>{ if(q.reasonCorrect && q.exampleCorrect){ parts.push(buildAnswerText(q,i)); } });
     $('#answers').textContent = parts.join('\n\n');
   }
 
@@ -480,13 +463,12 @@
       q.exampleCorrect = true;
       if(!(q._scored)) { q._scored = true; state.score += 1; }
       $('#exampleMsg').className='result ok';
-      $('#exampleMsg').textContent='✅ 正解！次の問題へすすむよ';
-      renderAnswersList();
-      setTimeout(()=> nextQuestion(), 900);
+      $('#exampleMsg').textContent='✅ 正解！「次の問題へ」を押そう';
+      document.querySelectorAll('#exampleArea .chip').forEach(b=>b.disabled=true);
+      updateCopyBox(); renderJumpList();
     }else{
       $('#exampleMsg').className='result bad';
       $('#exampleMsg').textContent=explainWrongExample(q.topic, q.pickedReason, q.pickedExample);
-      // 不正解でもチップは残したまま・再選択可（正解は表示しない）
     }
     updatePreview(); updatePills(); updateOkButtons();
   }
@@ -501,15 +483,19 @@
     // STEP1 OK
     const w1 = $('#okWrap1'), b1 = $('#btn-ok1');
     if(q.pickedReason && !q.confirmedStep1){ w1.style.display='flex'; b1.disabled=false; } else { w1.style.display='none'; b1.disabled=true; }
-    // STEP2 OK（選択済みかつ未判定/未正解のとき表示）
+    // STEP2 OK（選択済みかつ未正解のとき表示）
     const w2 = $('#okWrap2'), b2 = $('#btn-ok2');
     if(q.confirmedStep1 && q.pickedExample && !q.exampleCorrect){ w2.style.display='flex'; b2.disabled=false; } else { w2.style.display='none'; b2.disabled=true; }
+    // 次へ（正解時のみ）
+    const nw = $('#nextWrap');
+    nw.style.display = q.exampleCorrect ? 'flex' : 'none';
   }
 
   /* 初期化・バインド */
   initQuestions(); render();
   $('#btn-ok1').addEventListener('click', confirmStep1);
   $('#btn-ok2').addEventListener('click', confirmStep2);
+  $('#btn-next').addEventListener('click', nextQuestion);
 
   function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
   function resetAll(){ initQuestions(); render(); updateBar(); }
