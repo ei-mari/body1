@@ -5,49 +5,51 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ + TTS）</title>
 <style>
-  :root{
-    --bg:#f7f7fb; --card:#ffffff; --ink:#0f172a; --muted:#6b7280;
-    --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626;
-    --radius:16px;
-  }
+  :root{ --bg:#f7f7fb; --card:#fff; --ink:#0f172a; --muted:#6b7280; --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626; --radius:16px; }
   *{box-sizing:border-box} html,body{height:100%}
-  body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Noto Sans JP",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink)}
-  .container{max-width:900px; margin:0 auto; padding:clamp(16px,3vw,28px)}
-  header{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px}
-  h1{font-size:clamp(20px,4.6vw,28px); margin:0}
-  .toolbar{display:flex; gap:8px}
-  button{border:0; background:var(--accent); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow:0 1px 0 rgba(0,0,0,.08)}
-  button.secondary{background:#e5e7eb; color:#111827}
-  button.ghost{background:transparent; color:var(--accent); padding:8px 10px}
-  button.primary{background:var(--accent); color:#fff}
-  button:focus{outline:2px solid var(--ring); outline-offset:2px}
-  .badge{display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:4px 10px; border-radius:999px; font-size:12px}
-  .muted{color:var(--muted)} .hr{height:1px; background:#e5e7eb; margin:12px 0}
-  .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 8px 24px rgba(2,6,23,.06)}
-  .row{display:grid; gap:10px}
-  .topic{font-weight:800; font-size:20px}
-  .steps{display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 2px}
-  .pill{background:#eef2ff; color:#1e293b; font-weight:700; padding:3px 10px; border-radius:999px; font-size:12px}
-  .pill.active{background:var(--accent); color:#fff}
-  .pill.done{background:#dcfce7; color:#065f46}
-  .choice-wrap{display:flex; flex-wrap:wrap; gap:8px}
-  .chip{padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px; cursor:pointer; background:#fff; transition:transform .08s ease, background .15s ease, border-color .15s ease; color:var(--ink)}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Noto Sans JP",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .container{max-width:900px;margin:0 auto;padding:clamp(16px,3vw,28px)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  h1{font-size:clamp(20px,4.6vw,28px);margin:0}
+  .toolbar{display:flex;gap:8px}
+  button{border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+  button.secondary{background:#e5e7eb;color:#111827}
+  button.ghost{background:transparent;color:var(--accent);padding:8px 10px}
+  button.primary{background:var(--accent);color:#fff}
+  button:focus{outline:2px solid var(--ring);outline-offset:2px}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:#e0e7ff;color:#3730a3;font-weight:700;padding:4px 10px;border-radius:999px;font-size:12px}
+  .muted{color:var(--muted)} .hr{height:1px;background:#e5e7eb;margin:12px 0}
+  .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(2,6,23,.06)}
+  .row{display:grid;gap:10px}
+  .topic{font-weight:800;font-size:20px}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
+  .pill{background:#eef2ff;color:#1e293b;font-weight:700;padding:3px 10px;border-radius:999px;font-size:12px}
+  .pill.active{background:var(--accent);color:#fff}
+  .pill.done{background:#dcfce7;color:#065f46}
+  .choice-wrap{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:10px 12px;border:1px solid #e5e7eb;border-radius:999px;cursor:pointer;background:#fff;transition:transform .08s ease, background .15s ease, border-color .15s ease;color:var(--ink)}
   .chip:hover{transform:translateY(-1px)}
-  .chip[disabled]{opacity:.55; cursor:not-allowed; transform:none}
-  .chip.ok.selected{background:#dcfce7; border-color:#86efac}
-  .chip.bad.flash{background:#fee2e2; border-color:#fecaca}
-  .preview{background:#f1f5f9; border-radius:12px; padding:12px; font-size:15px}
-  .preview b{color:#0f172a}
-  .tts{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px}
-  .progress{height:6px; background:#e5e7eb; border-radius:999px; overflow:hidden}
-  .bar{height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#2563eb); transition:width .25s ease}
-  .footer{display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:wrap; margin-top:10px}
-  .result{font-weight:700} .result.ok{color:var(--ok)} .result.bad{color:var(--bad)}
-  .copy-area{white-space:pre-wrap; background:#0b1020; color:#e2e8f0; padding:12px; border-radius:12px; font-size:14px}
-  details{margin-top:4px}
-  summary{cursor:pointer; color:var(--muted)}
+  .chip[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+  .chip.ok.selected{background:#dcfce7;border-color:#86efac}
+  .chip.bad.flash{background:#fee2e2;border-color:#fecaca}
+  .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
+  .tts{display:flex;align-items:center;gap:8px;margin-top:6px}
+  .tts .tiny{background:#e5e7eb !important;color:#111827 !important;padding:6px 10px;border-radius:999px}
+  .progress{height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+  .bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .25s ease}
+  .footer{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .result{font-weight:700}.result.ok{color:var(--ok)}.result.bad{color:var(--bad)}
+  .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
+  details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
+
+  /* ===== Lean（集中）モード ===== */
+  body.lean .steps, body.lean #reasonMsg, body.lean #exampleMsg, body.lean #btn-randTopic, body.lean .badge{display:none!important}
+  body.lean .row{gap:8px}
+  #reasonSummary{display:none;align-items:center;gap:8px}
+  #reasonSummary .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  #reasonSummary button{background:transparent;color:var(--accent);padding:4px 6px;border-radius:8px}
   @media (min-width:760px){ .chip{padding:12px 14px} }
-  @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none; border:1px solid #e5e7eb} }
+  @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
 </head>
 <body>
@@ -63,7 +65,7 @@
   <div class="progress"><div id="bar" class="bar"></div></div>
 
   <div id="quiz" class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div class="badge">Q<span id="qnum">1</span> / <span id="qtotal">3</span></div>
       <div class="muted">正解数：<b id="score">0</b></div>
     </div>
@@ -81,22 +83,30 @@
       <div class="topic" id="topicText"></div>
     </div>
 
-    <div class="row" style="margin-top:4px">
+    <!-- STEP1 -->
+    <div id="reasonBlock" class="row" style="margin-top:4px">
       <div style="font-weight:700">STEP 1｜理由（1〜5）を選ぼう</div>
       <div id="reasonArea" class="choice-wrap"></div>
       <div id="reasonMsg" class="muted">タップして選択</div>
     </div>
 
+    <!-- STEP1 summary（Lean時に表示） -->
+    <div id="reasonSummary" class="row">
+      <div><span class="tag">✓ 理由</span> <span id="reasonPickedText"></span> <button id="btn-edit-reason">変更</button></div>
+    </div>
+
+    <!-- STEP2 -->
     <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
       <div style="font-weight:700">STEP 2｜その理由に合う たとえば（i〜v）を選ぼう</div>
       <div id="exampleArea" class="choice-wrap"></div>
       <div id="exampleMsg" class="muted">タップして選択</div>
     </div>
 
+    <!-- Preview & TTS -->
     <div class="row" style="margin-top:10px">
       <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
       <div class="tts">
-        <button id="btn-tts" class="secondary">🔊 読む</button>
+        <button id="btn-tts" class="tiny">🔊 読む</button>
         <details><summary>オプション（速度）</summary>
           <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
         </details>
@@ -114,7 +124,7 @@
   <div class="hr"></div>
 
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div style="font-weight:700">📜 まとめ（コピー用）</div>
       <button id="btn-copy" class="secondary">📋 コピー</button>
     </div>
@@ -123,11 +133,13 @@
 </div>
 
 <script>
-  // ====== Config ======
+  // ====== Config / Lean flag ======
   const CONFIG = { questionCount: 3, topicMode: 'auto', presetTopics: ['A','C','E'] };
+  const SP = new URLSearchParams(location.search);
+  const LEAN = SP.get('lean') === '1';
+  if(LEAN) document.body.classList.add('lean');
   (function(){
-    const sp = new URLSearchParams(location.search);
-    const m = sp.get('topics');
+    const m = SP.get('topics');
     if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
   })();
 
@@ -146,15 +158,14 @@
     { key:'4', text:'it keeps us healthy.' },
     { key:'5', text:'it speeds up research.' },
   ];
-  // 例文をより自然に
+  // 自然な例文
   const examples = [
-    { key:'i',  text:'I can concentrate in class.' },          // 1: focus
-    { key:'ii', text:'I feel awake in the morning.' },          // 2: energy
-    { key:'iii',text:'We can get ready faster.' },              // 3: save time
-    { key:'iv', text:'I don’t get sick often.' },               // 4: healthy
-    { key:'v',  text:'We can look up information in seconds.' } // 5: research
+    { key:'i',  text:'I can concentrate in class.' },
+    { key:'ii', text:'I feel awake in the morning.' },
+    { key:'iii',text:'We can get ready faster.' },
+    { key:'iv', text:'I don’t get sick often.' },
+    { key:'v',  text:'We can look up information in seconds.' }
   ];
-  // 妥当性の見直し：Eは 2,4 に変更
   const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
   const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
 
@@ -166,7 +177,7 @@
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
   // ====== State ======
-  const state = { step:0, questions:[], score:0, answers:[] };
+  const state = { step:0, questions:[], score:0 };
 
   function initQuestions(){
     let picks;
@@ -180,7 +191,7 @@
       picks = sampleDistinct(['A','B','C','D','E'], CONFIG.questionCount);
     }
     state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, _scored:false }));
-    state.step = 0; state.score = 0; state.answers = [];
+    state.step = 0; state.score = 0;
   }
 
   // ====== Render ======
@@ -196,6 +207,7 @@
     renderExampleUI(q);
     updatePreview();
     updatePills();
+    updateLeanUI();
 
     $('#result').className = 'muted';
     $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
@@ -233,13 +245,12 @@
     const t0 = topics.find(x=>x.key===q.topic).text;
     const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
     let ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
-    if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I'); // 読み上げ自然化
     const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
     const s2 = ensurePeriod(`For example, ${ex}`);
     $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
   }
 
-  // ====== STEP表示の更新 ======
+  // ====== STEP pills ======
   function updatePills(){
     const q = state.questions[state.step];
     const p1 = $('#pill-step1'), p2 = $('#pill-step2'), p3 = $('#pill-preview');
@@ -248,11 +259,28 @@
     p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
-  // ====== Interactions ======
-  function flashBad(node){
-    node.classList.add('bad','flash');
-    setTimeout(()=>node.classList.remove('flash'), 600);
+  // ====== Lean UI ======
+  function updateLeanUI(){
+    if(!LEAN) return;
+    const q = state.questions[state.step];
+    const sum = $('#reasonSummary');
+    if(q.reasonCorrect){
+      $('#reasonPickedText').textContent = reasons.find(x=>x.key===q.pickedReason).text;
+      sum.style.display = 'flex';
+      $('#reasonBlock').style.display = 'none';
+    }else{
+      sum.style.display = 'none';
+      $('#reasonBlock').style.display = 'grid';
+    }
   }
+  $('#btn-edit-reason').addEventListener('click', ()=>{
+    const q = state.questions[state.step];
+    q.reasonCorrect=false; q.exampleCorrect=false; q.pickedReason=null; q.pickedExample=null;
+    render();
+  });
+
+  // ====== Interactions ======
+  function flashBad(node){ node.classList.add('bad','flash'); setTimeout(()=>node.classList.remove('flash'), 600); }
 
   function onPickReason(key, chip){
     const q = state.questions[state.step];
@@ -265,14 +293,13 @@
       $('#reasonMsg').className = 'result ok';
       $('#reasonMsg').textContent = '✅ 正解！つづいて「たとえば」を選ぼう';
       renderExampleUI(q);
-      setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 50);
+      setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
     } else {
       flashBad(chip);
       $('#reasonMsg').className = 'result bad';
       $('#reasonMsg').textContent = '❌ このトピックには合わないよ。もう一度！';
     }
-    updatePreview();
-    updatePills();
+    updatePreview(); updatePills(); updateLeanUI();
   }
 
   function onPickExample(key, chip){
@@ -288,7 +315,6 @@
       $('#exampleMsg').textContent = '✅ 正解！Previewをきいて確認しよう';
       if(!(q._scored)) { q._scored = true; state.score += 1; }
       $('#btn-next').disabled = false;
-      updateAnswersBox();
       $('#result').className='result ok';
       $('#result').textContent='🎉 よくできました！「次へ」で続けよう';
     } else {
@@ -296,13 +322,12 @@
       $('#exampleMsg').className = 'result bad';
       $('#exampleMsg').textContent = '❌ その「たとえば」は選んだ理由に合わないよ。';
     }
-    updatePreview();
-    updatePills();
+    updatePreview(); updatePills();
   }
 
   function next(){
     if(state.step < state.questions.length-1){ state.step++; render(); }
-    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); }
+    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); updateLeanUI(); }
   }
 
   function randomizeTopic(){
@@ -313,49 +338,21 @@
     render();
   }
 
-  function updateAnswersBox(){
-    const texts = state.questions.map((q,i)=>{
-      if(!(q.reasonCorrect && q.exampleCorrect)) return null;
-      const t = topics.find(x=>x.key===q.topic).text;
-      const r = reasons.find(x=>x.key===q.pickedReason).text;
-      let ex = examples.find(x=>x.key===q.pickedExample).text;
-      if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
-      const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
-      const s2 = ensurePeriod(`For example, ${ex}`);
-      return `Q${i+1}\n${s1}\n${s2}`;
-    }).filter(Boolean);
-    $('#answers').textContent = texts.join('\n\n');
-  }
+  function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
 
-  function updateBar(done=false){
-    const pct = done ? 100 : (state.step / state.questions.length) * 100;
-    $('#bar').style.width = pct + '%';
-  }
-
-  function resetAll(){ initQuestions(); render(); updateAnswersBox(); updateBar(); }
+  function resetAll(){ initQuestions(); render(); updateBar(); }
 
   // ====== TTS（トグル） ======
   const tts = {
-    supported: 'speechSynthesis' in window,
-    utter: null,
+    supported: 'speechSynthesis' in window, utter: null,
     get rate(){ return parseFloat($('#rate').value || '1'); },
-    speak(text){
-      if(!this.supported) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'en-US'; u.rate = this.rate;
-      const voices = window.speechSynthesis.getVoices();
-      const v = voices.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v;
-      this.utter = u; window.speechSynthesis.speak(u);
-    },
-    stop(){ this.supported && window.speechSynthesis.cancel(); }
+    speak(text){ if(!this.supported) return; window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=this.rate; const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v; this.utter=u; speechSynthesis.speak(u); },
+    stop(){ this.supported && speechSynthesis.cancel(); }
   };
   function previewText(){ return $('#preview').innerText.replace(/^Preview:\s*/,'').trim(); }
 
   // ====== Init ======
   initQuestions(); render();
-
-  // actions
   $('#btn-next').addEventListener('click', next);
   $('#btn-randTopic').addEventListener('click', randomizeTopic);
   $('#btn-reset').addEventListener('click', resetAll);
@@ -366,17 +363,14 @@
   const ttsBtn = $('#btn-tts');
   if(tts.supported){
     ttsBtn.addEventListener('click', ()=>{
-      const speaking = window.speechSynthesis.speaking;
+      const speaking = speechSynthesis.speaking;
       if(!speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
       else { tts.stop(); ttsBtn.textContent='🔊 読む'; }
     });
     $('#rate').addEventListener('input', ()=>{
-      if(window.speechSynthesis.speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
+      if(speechSynthesis.speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
     });
-  } else {
-    $('#ttsNote').textContent='（ブラウザがTTSに非対応）';
-    ttsBtn.disabled = true; $('#rate').disabled = true;
-  }
+  } else { $('#ttsNote').textContent='（ブラウザがTTSに非対応）'; ttsBtn.disabled = true; $('#rate').disabled = true; }
 </script>
 </body>
 </html>
