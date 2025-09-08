@@ -32,6 +32,8 @@
   .chip[disabled]{opacity:.55;cursor:not-allowed;transform:none}
   .chip.ok.selected{background:#dcfce7;border-color:#86efac}
   .chip.bad.flash{background:#fee2e2;border-color:#fecaca}
+  /* 追加：選択中の見た目（OK押下まで判定しないモード用） */
+  .chip.selected{ outline:2px solid var(--accent); background:#eff6ff; border-color:#bfdbfe }
   .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
   .tts{display:flex;align-items:center;gap:8px;margin-top:6px}
   .progress{height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden}
@@ -191,7 +193,7 @@
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
   // ====== State ======
-  const state = { step:0, questions:[], score:0 };
+  const state = { step:0, questions:[], score:0, answers:[] };
 
   function initQuestions(){
     let picks;
@@ -205,7 +207,7 @@
       picks = sampleDistinct(['A','B','C','D','E'], CONFIG.questionCount);
     }
     state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, confirmedStep1:false, _scored:false }));
-    state.step = 0; state.score = 0;
+    state.step = 0; state.score = 0; state.answers = [];
   }
 
   // ====== Render ======
@@ -222,6 +224,7 @@
     updatePreview();
     updatePills();
     updateStepVisibility();
+    updateOkVisibility();
 
     $('#result').className = 'muted';
     $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
@@ -232,8 +235,18 @@
     const wrap = $('#reasonArea'); wrap.innerHTML='';
     reasons.forEach(r=>{
       const chip = el('button','chip'); chip.type='button'; chip.textContent = `${r.key}. ${r.text}`;
-      if(q.reasonCorrect){ chip.disabled = true; }
-      chip.addEventListener('click', ()=> onPickReason(r.key, chip));
+      if(q.confirmedStep1){ chip.disabled = true; }     // OK確定後は無効
+      if(q.pickedReason === r.key) chip.classList.add('selected');
+      chip.addEventListener('click', ()=>{
+        if(q.confirmedStep1) return;
+        q.pickedReason = r.key;                         // ここでは判定しない
+        $('#reasonArea').querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
+        chip.classList.add('selected');
+        $('#reasonMsg').className = 'muted';
+        $('#reasonMsg').textContent = 'PreviewでTOPIC SENTENCEを確認してOKを押そう';
+        updatePreview();
+        updateOkVisibility();
+      });
       wrap.appendChild(chip);
     });
     $('#reasonMsg').className = 'muted';
@@ -242,7 +255,7 @@
 
   function renderExampleUI(q){
     const block = $('#exampleBlock'), wrap = $('#exampleArea'); wrap.innerHTML='';
-    if(!q.confirmedStep1){ block.style.display='none'; return; }  // ← OK押下後に開く
+    if(!q.confirmedStep1){ block.style.display='none'; return; }  // OK押下後に開く
     block.style.display='grid';
     examples.forEach(ex=>{
       const chip = el('button','chip'); chip.type='button';
@@ -262,20 +275,11 @@
     const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
     const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
     let html = `<b>Preview:</b><br>${s1}`;
-    if(q.confirmedStep1){ // STEP2に入ったら 2文目を出す（未選択なら —）
+    if(q.confirmedStep1){ // STEP2に入ったら 2文目を出す
       const ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
-      const s2 = ensurePeriod(`For example, ${ex}`);
-      html += `<br>${s2}`;
+      html += `<br>${ensurePeriod(`For example, ${ex}`)}`;
     }
     $('#preview').innerHTML = html;
-
-    // OKボタンの表示/制御
-    const okw = $('#okWrap'), okbtn = $('#btn-ok');
-    if(q.reasonCorrect && !q.confirmedStep1){
-      okw.style.display = 'flex'; okbtn.disabled = false;
-    } else {
-      okw.style.display = 'none'; okbtn.disabled = true;
-    }
   }
 
   // ====== STEP pills ======
@@ -287,7 +291,7 @@
     p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
-  // ====== 可視制御（STEP1を隠すのはOK押下後） ======
+  // ====== 可視制御（OK後にSTEP2表示） ======
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const rb = $('#reasonBlock');
@@ -307,6 +311,20 @@
     }
   }
 
+  // ====== まとめ（コピー用） ======
+  function updateAnswersBox(){
+    const texts = state.questions.map((q,i)=>{
+      if(!(q.reasonCorrect && q.exampleCorrect)) return null;
+      const t = topics.find(x=>x.key===q.topic).text;
+      const r = reasons.find(x=>x.key===q.pickedReason).text;
+      const ex = examples.find(x=>x.key===q.pickedExample).text;
+      const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
+      const s2 = ensurePeriod(`For example, ${ex}`);
+      return `Q${i+1}\n${s1}\n${s2}`;
+    }).filter(Boolean);
+    $('#answers').textContent = texts.join('\n\n');
+  }
+
   // ====== フィードバック ======
   function flashBad(node){ node.classList.add('bad','flash'); setTimeout(()=>node.classList.remove('flash'), 600); }
   function explainWrongReason(topicKey, chosenReasonKey){
@@ -319,24 +337,27 @@
   }
 
   // ====== Handlers ======
-  function onPickReason(key, chip){
+  // STEP1：OKで初めて判定
+  function confirmStep1(){
     const q = state.questions[state.step];
-    const ok = (correctReasonsByTopic[q.topic]||[]).includes(key);
-    q.pickedReason = key;
+    if(!q.pickedReason) return;
+    const ok = (correctReasonsByTopic[q.topic]||[]).includes(q.pickedReason);
     if(ok){
       q.reasonCorrect = true;
-      $('#reasonArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
-      chip.classList.add('ok','selected');
+      q.confirmedStep1 = true;                 // STEP2へ
       $('#reasonMsg').className = 'result ok';
-      $('#reasonMsg').textContent = `✅ 正解！PreviewでTOPIC SENTENCEを確認してOKを押そう`;
-    } else {
-      flashBad(chip);
+      $('#reasonMsg').textContent = '✅ 正解！STEP 2 へ進もう';
+      updateStepVisibility();
+    }else{
+      q.reasonCorrect = false;
+      q.confirmedStep1 = false;
       $('#reasonMsg').className = 'result bad';
-      $('#reasonMsg').textContent = explainWrongReason(q.topic, key);
+      $('#reasonMsg').textContent = explainWrongReason(q.topic, q.pickedReason);
     }
-    updatePreview(); updatePills();
+    updatePreview(); updatePills(); updateOkVisibility();
   }
 
+  // STEP2：クリック即判定
   function onPickExample(key, chip){
     const q = state.questions[state.step];
     const must = exampleByReason[q.pickedReason];
@@ -352,6 +373,7 @@
       $('#btn-next').disabled = false;
       $('#result').className='result ok';
       $('#result').textContent='🎉 よくできました！「次へ」で続けよう';
+      updateAnswersBox();
     } else {
       flashBad(chip);
       $('#exampleMsg').className = 'result bad';
@@ -360,14 +382,14 @@
     updatePreview(); updatePills();
   }
 
-  // OK（STEP2へ）
-  $('#btn-ok').addEventListener('click', ()=>{
+  // OKボタン表示制御
+  function updateOkVisibility(){
     const q = state.questions[state.step];
-    if(!q.reasonCorrect) return;
-    q.confirmedStep1 = true;
-    updateStepVisibility(); updatePreview(); updatePills();
-    setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
-  });
+    const okw = $('#okWrap'), okbtn = $('#btn-ok');
+    if(q.pickedReason && !q.confirmedStep1){ okw.style.display = 'flex'; okbtn.disabled = false; }
+    else { okw.style.display = 'none'; okbtn.disabled = true; }
+  }
+  $('#btn-ok').addEventListener('click', confirmStep1);
 
   function next(){
     if(state.step < state.questions.length-1){ state.step++; render(); }
@@ -383,7 +405,7 @@
   }
 
   function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
-  function resetAll(){ initQuestions(); render(); updateBar(); }
+  function resetAll(){ initQuestions(); render(); updateBar(); updateAnswersBox(); }
 
   // ====== TTS ======
   const tts = {
