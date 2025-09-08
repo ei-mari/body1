@@ -28,6 +28,8 @@
   .topic{font-weight:800; font-size:20px}
   .steps{display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 2px}
   .pill{background:#eef2ff; color:#1e293b; font-weight:700; padding:3px 10px; border-radius:999px; font-size:12px}
+  .pill.active{background:var(--accent); color:#fff}
+  .pill.done{background:#dcfce7; color:#065f46}
   .choice-wrap{display:flex; flex-wrap:wrap; gap:8px}
   .chip{padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px; cursor:pointer; background:#fff; transition:transform .08s ease, background .15s ease, border-color .15s ease; color:var(--ink)}
   .chip:hover{transform:translateY(-1px)}
@@ -68,11 +70,11 @@
 
     <div class="hr"></div>
 
-    <!-- タスク案内（コンパクト） -->
+    <!-- STEPインジケータ -->
     <div class="steps">
-      <span class="pill">STEP 1: 理由を選ぶ</span>
-      <span class="pill">STEP 2: たとえばを選ぶ</span>
-      <span class="pill">🔊 Preview をきく</span>
+      <span class="pill" id="pill-step1">STEP 1: 理由</span>
+      <span class="pill" id="pill-step2">STEP 2: たとえば</span>
+      <span class="pill" id="pill-preview">🔊 Preview</span>
     </div>
 
     <div class="row" style="margin-top:6px">
@@ -95,8 +97,7 @@
       <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
       <div class="tts">
         <button id="btn-tts" class="secondary">🔊 読む</button>
-        <details>
-          <summary>オプション（速度）</summary>
+        <details><summary>オプション（速度）</summary>
           <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
         </details>
         <small id="ttsNote" class="muted"></small>
@@ -145,14 +146,16 @@
     { key:'4', text:'it keeps us healthy.' },
     { key:'5', text:'it speeds up research.' },
   ];
+  // 例文をより自然に
   const examples = [
-    { key:'i',  text:'I/we can listen well in class.' },
-    { key:'ii', text:'I don’t feel sleepy in the morning.' },
-    { key:'iii',text:'We don’t waste time choosing clothes.' },
-    { key:'iv', text:'I don’t catch colds often.' },
-    { key:'v',  text:'We can look up words in seconds.' },
+    { key:'i',  text:'I can concentrate in class.' },          // 1: focus
+    { key:'ii', text:'I feel awake in the morning.' },          // 2: energy
+    { key:'iii',text:'We can get ready faster.' },              // 3: save time
+    { key:'iv', text:'I don’t get sick often.' },               // 4: healthy
+    { key:'v',  text:'We can look up information in seconds.' } // 5: research
   ];
-  const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','3'] };
+  // 妥当性の見直し：Eは 2,4 に変更
+  const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
   const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
 
   // ====== Helpers ======
@@ -192,6 +195,7 @@
     renderReasonUI(q);
     renderExampleUI(q);
     updatePreview();
+    updatePills();
 
     $('#result').className = 'muted';
     $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
@@ -229,10 +233,19 @@
     const t0 = topics.find(x=>x.key===q.topic).text;
     const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
     let ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
-    if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
+    if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I'); // 読み上げ自然化
     const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
     const s2 = ensurePeriod(`For example, ${ex}`);
     $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
+  }
+
+  // ====== STEP表示の更新 ======
+  function updatePills(){
+    const q = state.questions[state.step];
+    const p1 = $('#pill-step1'), p2 = $('#pill-step2'), p3 = $('#pill-preview');
+    p1.className = 'pill ' + (q.reasonCorrect ? 'done' : 'active');
+    p2.className = 'pill ' + (q.reasonCorrect ? (q.exampleCorrect ? 'done' : 'active') : '');
+    p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
   // ====== Interactions ======
@@ -247,13 +260,11 @@
     q.pickedReason = key;
     if(ok){
       q.reasonCorrect = true;
-      // disable others,緑は選択チップのみ
       $('#reasonArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
       chip.classList.add('ok','selected');
       $('#reasonMsg').className = 'result ok';
       $('#reasonMsg').textContent = '✅ 正解！つづいて「たとえば」を選ぼう';
       renderExampleUI(q);
-      // 自動スクロール
       setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 50);
     } else {
       flashBad(chip);
@@ -261,6 +272,7 @@
       $('#reasonMsg').textContent = '❌ このトピックには合わないよ。もう一度！';
     }
     updatePreview();
+    updatePills();
   }
 
   function onPickExample(key, chip){
@@ -285,11 +297,12 @@
       $('#exampleMsg').textContent = '❌ その「たとえば」は選んだ理由に合わないよ。';
     }
     updatePreview();
+    updatePills();
   }
 
   function next(){
     if(state.step < state.questions.length-1){ state.step++; render(); }
-    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); }
+    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); }
   }
 
   function randomizeTopic(){
