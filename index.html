@@ -41,10 +41,11 @@
   .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
   details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
 
-  /* STEP1の答え要約（STEP2ヘッダの下に出す） */
-  .summary-line{display:none;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px}
+  /* 理由+STEP2をひとつの枠に */
+  .reason-group{display:none;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
+  .summary-line{display:flex;align-items:center;gap:10px}
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
-  .hint{color:#166534;font-weight:700}
+  .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
   @media (min-width:760px){ .chip{padding:12px 14px} }
   @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
@@ -87,14 +88,16 @@
       <div id="reasonMsg" class="muted">タップして選択</div>
     </div>
 
-    <!-- STEP2 -->
+    <!-- 理由＋STEP2 を一体化 -->
     <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
-      <div style="font-weight:700">STEP 2｜その理由に合う たとえば を選ぼう</div>
-      <div id="reasonSummary" class="summary-line">
-        <span class="tag">✓ 理由</span>
-        <span id="reasonPickedText"></span>
+      <div id="reasonGroup" class="reason-group">
+        <div id="reasonSummary" class="summary-line">
+          <span class="tag">✓ 理由</span>
+          <span id="reasonPickedText"></span>
+        </div>
+        <div class="subhead">STEP 2｜この理由に合う <span style="text-decoration:underline">たとえば</span> を選ぼう</div>
+        <div id="exampleArea" class="choice-wrap"></div>
       </div>
-      <div id="exampleArea" class="choice-wrap"></div>
       <div id="exampleMsg" class="muted">タップして選択</div>
     </div>
 
@@ -152,42 +155,32 @@
     { key:'4', text:'it keeps us healthy.' },
     { key:'5', text:'it speeds up research.' },
   ];
-
-  /* 例文（A2〜B1 へ少しレベルアップ） */
+  // 例文（少しレベルUP）
   const examples = [
-    { key:'i',  text:'I can stay focused in class.' },           // 1: focus
-    { key:'ii', text:'I feel more awake in the morning.' },       // 2: energy
-    { key:'iii',text:'We can get ready more quickly.' },          // 3: time
-    { key:'iv', text:'I rarely catch colds.' },                   // 4: health
-    { key:'v',  text:'We can look up information in seconds.' }   // 5: research
+    { key:'i',  text:'I can stay focused in class.' },
+    { key:'ii', text:'I feel more awake in the morning.' },
+    { key:'iii',text:'We can get ready more quickly.' },
+    { key:'iv', text:'I rarely catch colds.' },
+    { key:'v',  text:'We can look up information in seconds.' }
   ];
-
-  // 理由⇔例の対応
   const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
-  // トピックごとの正答理由
   const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
 
-  /* 小学生向けの短いヒント */
+  // ヒント用メタ
   const reasonMeta = {
-    '1': {tag:'🎧 集中', hint:'授業に集中できる／気が散りにくい'},
-    '2': {tag:'⚡ 元気', hint:'朝に元気・目がさめる'},
-    '3': {tag:'⏱ 朝の時間', hint:'支度がはやい・時間の節約'},
-    '4': {tag:'💪 健康', hint:'病気になりにくい・体が元気'},
-    '5': {tag:'🔎 調べる速さ', hint:'言葉や情報をすぐ調べられる'}
+    '1': {tag:'🎧 集中'}, '2': {tag:'⚡ 元気'}, '3': {tag:'⏱ 朝の時間'},
+    '4': {tag:'💪 健康'}, '5': {tag:'🔎 調べる速さ'}
   };
   const topicWhy = {
-    'A':'制服だと毎朝の服えらびがいらず、見た目の差も小さくて気が散りにくい。',
+    'A':'制服だと服えらびがいらず、見た目の差も小さくて気が散りにくい。',
     'B':'野菜は体の調子をととのえ、病気をへらす助けになる。',
     'C':'早く寝ると次の朝に元気で、授業でも集中しやすい。',
-    'D':'タブレットなら言葉や情報をすぐ調べられて、学習が進む。',
+    'D':'タブレットなら情報をすぐ調べられて、学習が進む。',
     'E':'朝ごはんでエネルギーが手に入り、体も元気になる。'
   };
-  const altExample = { // ヒントとして出す候補
-    '1':'I can stay focused in class.',
-    '2':'I feel more awake in the morning.',
-    '3':'We can get ready more quickly.',
-    '4':'I rarely catch colds.',
-    '5':'We can look up information in seconds.'
+  const altExample = {
+    '1':'I can stay focused in class.', '2':'I feel more awake in the morning.',
+    '3':'We can get ready more quickly.', '4':'I rarely catch colds.', '5':'We can look up information in seconds.'
   };
 
   // ====== Helpers ======
@@ -281,36 +274,38 @@
     p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
   }
 
-  // ====== STEP1 を隠し、要約を STEP2 に表示 ======
+  // ====== 可視制御（STEP1を隠し、理由の下にSTEP2） ======
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const rb = $('#reasonBlock');
+    const grp = $('#reasonGroup');
     const sum = $('#reasonSummary');
     if(q.reasonCorrect){
       rb.style.display = 'none';
-      $('#reasonPickedText').textContent = reasons.find(x=>x.key===q.pickedReason).text + 
-        `（${reasonMeta[q.pickedReason].tag}）`;
-      sum.style.display = 'flex';
+      $('#reasonPickedText').textContent =
+        reasons.find(x=>x.key===q.pickedReason).text + `（${reasonMeta[q.pickedReason].tag}）`;
       $('#exampleBlock').style.display = 'grid';
+      grp.style.display = 'grid';
+      sum.style.display = 'flex';
     }else{
       rb.style.display = 'grid';
-      sum.style.display = 'none';
+      $('#exampleBlock').style.display = 'none';
+      grp.style.display = 'none';
     }
   }
 
-  // ====== Interactions ======
+  // ====== フィードバック ======
   function flashBad(node){ node.classList.add('bad','flash'); setTimeout(()=>node.classList.remove('flash'), 600); }
-
   function explainWrongReason(topicKey, chosenReasonKey){
     const correctTags = (correctReasonsByTopic[topicKey]||[]).map(k=>reasonMeta[k].tag).join(' / ');
     return `その理由だと話がずれるよ。${topicWhy[topicKey]} だから、ポイントは ${correctTags}。今えらんだのは「${reasonMeta[chosenReasonKey].tag}」。もう一度考えよう。`;
   }
-
   function explainWrongExample(pickedReasonKey, pickedExampleKey){
     const exBelongsTo = Object.entries(exampleByReason).find(([r,e])=>e===pickedExampleKey)?.[0];
     return `その例は「${reasonMeta[exBelongsTo].tag}」の話。今の理由は「${reasonMeta[pickedReasonKey].tag}」。つながっていないね。ヒント：例）${altExample[pickedReasonKey]}`;
   }
 
+  // ====== Handlers ======
   function onPickReason(key, chip){
     const q = state.questions[state.step];
     const ok = (correctReasonsByTopic[q.topic]||[]).includes(key);
@@ -320,7 +315,7 @@
       $('#reasonArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
       chip.classList.add('ok','selected');
       $('#reasonMsg').className = 'result ok';
-      $('#reasonMsg').innerHTML = `✅ 正解！<span class="hint">ヒント：</span>${topicWhy[q.topic]}`;
+      $('#reasonMsg').textContent = `✅ 正解！ ${topicWhy[q.topic]}`;
       renderExampleUI(q);
       updateStepVisibility();
       setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
@@ -371,16 +366,16 @@
   function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
   function resetAll(){ initQuestions(); render(); updateBar(); }
 
-  // ====== TTS（トグル） ======
+  // ====== TTS ======
   const tts = {
     supported: 'speechSynthesis' in window, utter: null,
     get rate(){ return parseFloat($('#rate').value || '1'); },
-    speak(text){ if(!this.supported) return; window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=this.rate; const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v; this.utter=u; speechSynthesis.speak(u); },
+    speak(text){ if(!this.supported) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=this.rate; const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v; this.utter=u; speechSynthesis.speak(u); },
     stop(){ this.supported && speechSynthesis.cancel(); }
   };
   function previewText(){ return $('#preview').innerText.replace(/^Preview:\s*/,'').trim(); }
 
-  // ====== Init ======
+  // ====== Init & binds ======
   initQuestions(); render();
   $('#btn-next').addEventListener('click', next);
   $('#btn-randTopic').addEventListener('click', randomizeTopic);
@@ -388,17 +383,13 @@
   $('#btn-print').addEventListener('click', ()=> window.print());
   $('#btn-copy').addEventListener('click', ()=>{ const t=$('#answers').textContent.trim(); if(!t) return; navigator.clipboard.writeText(t); });
 
-  // TTS toggle
   const ttsBtn = $('#btn-tts');
   if(tts.supported){
     ttsBtn.addEventListener('click', ()=>{
-      const speaking = speechSynthesis.speaking;
-      if(!speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
+      if(!speechSynthesis.speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
       else { tts.stop(); ttsBtn.textContent='🔊 読む'; }
     });
-    $('#rate').addEventListener('input', ()=>{
-      if(speechSynthesis.speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
-    });
+    $('#rate').addEventListener('input', ()=>{ if(speechSynthesis.speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }});
   } else { $('#ttsNote').textContent='（ブラウザがTTSに非対応）'; ttsBtn.disabled = true; $('#rate').disabled = true; }
 </script>
 </body>
