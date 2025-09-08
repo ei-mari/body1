@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Body 1 ビルダークイズ</title>
+<title>正しい2文づくりクイズ</title>
 <style>
   :root{ --bg:#f7f7fb; --card:#fff; --ink:#0f172a; --muted:#6b7280; --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626; --radius:16px; }
   *{box-sizing:border-box} html,body{height:100%}
@@ -55,7 +55,7 @@
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
   .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
 
-  /* まとめ（ジャンプボタン） */
+  /* できた文（ジャンプボタン） */
   .jumpbtn{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 12px;border-radius:12px;background:#eef2ff;color:#1e293b;border:1px solid #dbeafe;cursor:pointer}
   .tag-ok{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
   .tag-ng{background:#fee2e2;color:#7f1d1d;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
@@ -66,7 +66,7 @@
 <body>
 <div class="container">
   <header>
-    <h1>🟨 Body 1 ビルダークイズ</h1>
+    <h1>🟨 正しい2文づくりクイズ</h1>
     <div class="toolbar">
       <button id="btn-reset" class="secondary">↺ リセット</button>
       <button id="btn-print" class="secondary">🖨️ 印刷</button>
@@ -84,13 +84,13 @@
     <div class="hr"></div>
 
     <div class="steps">
-      <span class="pill" id="pill-step1">STEP 1: 理由</span>
-      <span class="pill" id="pill-step2">STEP 2: たとえば</span>
+      <span class="pill" id="pill-step1">① 理由をえらぶ</span>
+      <span class="pill" id="pill-step2">② たとえばをえらぶ</span>
     </div>
 
     <div class="topic-head">
       <div class="topic-title" id="topicText"></div>
-      <div class="topic-subline"><span>💡 正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span></div>
+      <div class="topic-subline"><span>💡 正しい理由と「たとえば」をえらんで、2文を完成させよう。</span></div>
     </div>
 
     <!-- STEP1 理由 -->
@@ -105,21 +105,21 @@
         <div id="reasonSummary" class="summary-line">
           <span class="tag">✓ 理由</span>
           <span id="reasonPickedText"></span>
-          <button id="btn-edit-reason" class="slim secondary" type="button">変更</button>
+          <button id="btn-edit-reason" class="slim secondary" type="button">やり直す</button>
         </div>
-        <div class="subhead">STEP 2｜この理由に合う <span style="text-decoration:underline">たとえば</span> を選ぼう</div>
+        <div class="subhead">② この理由に合う <span style="text-decoration:underline">たとえば</span> をえらぼう</div>
         <div id="exampleArea" class="choice-wrap"></div>
       </div>
       <div id="exampleMsg" class="muted"></div>
     </div>
 
-    <!-- Preview（下）＋ OK & 次へ -->
+    <!-- できた文（下）＋ OK & 次へ -->
     <div class="row" id="previewBlock">
       <div class="preview">
-        <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
+        <div id="previewText"><b>できた文:</b><br>First, — because —.</div>
         <div class="preview-actions">
           <button id="btn-tts" class="btn-icon" aria-label="読み上げ">🎧</button>
-          <details><summary>▶︎ オプション</summary>
+          <details><summary>読み上げのはやさ</summary>
             <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
           </details>
           <small id="ttsNote" class="muted"></small>
@@ -127,26 +127,26 @@
       </div>
       <div class="okwrap" id="okWrap1">
         <span class="muted">これでいい？</span>
-        <button id="btn-ok1" class="primary" disabled>OK（STEP 2へ）</button>
+        <button id="btn-ok1" class="primary" disabled>この文でOK</button>
       </div>
       <div class="okwrap" id="okWrap2">
-        <span class="muted">答え合わせ：</span>
+        <span class="muted">答えあわせ：</span>
         <button id="btn-ok2" class="primary" disabled>OK</button>
       </div>
       <div class="okwrap" id="nextWrap">
-        <button id="btn-next" class="secondary">次の問題へ →</button>
+        <button id="btn-next" class="secondary">つぎの問題へ</button>
       </div>
-      <div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div>
+      <div id="result" class="muted">① → ② の順に完成させよう</div>
     </div>
   </div>
 
   <div class="hr"></div>
 
-  <!-- まとめ：ジャンプボタン + 完成分コピー -->
+  <!-- できた文：ジャンプボタン + コピー -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div style="font-weight:700">📜 まとめ</div>
-      <button id="btn-copy" class="secondary">📋 作った文を見る</button>
+      <div style="font-weight:700">📜 できた文</div>
+      <button id="btn-copy" class="secondary">📋 コピー</button>
     </div>
     <div id="jumpList" class="row" style="margin-top:6px"></div>
     <div id="answers" class="copy-area" aria-live="polite"></div>
@@ -162,9 +162,8 @@
     if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
   })();
 
-  /* ====== Data（5トピック×5理由×5例：文を指定どおりに更新） ====== */
+  /* ====== Data（指定の25文に一致） ====== */
   const BANK = {
-    /* A. 制服 */
     A:{topic:'Students should wear school uniforms.',
       reasons:[
         {id:'A-r1',text:'they save time in the morning.',tag:'⏱ 朝の時間',exId:'A-ex-iii'},
@@ -181,8 +180,6 @@
         {id:'A-ex-v',   text:'we aren’t teased for not wearing brand-name clothes.'},
       ]
     },
-
-    /* B. 野菜 */
     B:{topic:'Eating vegetables is important.',
       reasons:[
         {id:'B-r1',text:'they keep our bodies healthy.',tag:'💪 健康',exId:'B-ex-iv'},
@@ -199,8 +196,6 @@
         {id:'B-ex-i2', text:'we get enough vitamin C to grow well.'},
       ]
     },
-
-    /* C. 早寝 */
     C:{topic:'Going to bed early is a good habit.',
       reasons:[
         {id:'C-r1',text:'it gives me more energy in the morning.',tag:'⚡ 朝の元気',exId:'C-ex-ii'},
@@ -217,8 +212,6 @@
         {id:'C-ex-v',  text:"I'm not late because I sleep and wake at set times."},
       ]
     },
-
-    /* D. タブレット */
     D:{topic:'Using tablets in class is helpful.',
       reasons:[
         {id:'D-r1',text:'it speeds up research.',tag:'🔎 調べる速さ',exId:'D-ex-v'},
@@ -235,8 +228,6 @@
         {id:'D-ex-i2', text:'we do quizzes that match our ability.'},
       ]
     },
-
-    /* E. 朝ごはん */
     E:{topic:'Eating breakfast is important.',
       reasons:[
         {id:'E-r1',text:'it gives me energy to start the day.',tag:'⚡ エネルギー',exId:'E-ex-ii'},
@@ -256,26 +247,46 @@
   };
   const topicKeys = Object.keys(BANK);
 
-  /* —— ネタバレしない指針ヒント —— */
+  /* —— バランス型ヒント（甘さ控えめ）：観点＋問いかけ —— */
   const HINT_BY_TAG = {
-    '⏱ 朝の時間':'朝の支度や時間が短くなることを示す例を選ぼう。',
-    '🎧 集中':'授業中に集中できることが伝わる例を選ぼう。',
-    '🤝 一体感':'みんなが同じでまとまる感じが出る例を選ぼう。',
-    '🛡 安全':'安全や見分けやすさに関する例を選ぼう。',
-    '⚖ 公平':'流行やブランドのプレッシャーが減る内容を選ぼう。',
-    '💪 健康':'体調がよい／病気になりにくい内容を選ぼう。',
-    '⚡ エネルギー':'朝に元気・体力が出る内容を選ぼう。',
-    '🌀 消化':'お腹や消化の調子がよくなる内容を選ぼう。',
-    '📈 成長':'体の成長や回復に役立つ内容を選ぼう。',
-    '🛡 免疫':'風邪をひきにくい等の病気予防の内容を選ぼう。',
-    '😊 機嫌':'気分が安定する／イライラが減る内容を選ぼう。',
-    '🙂 機嫌':'気分が安定する／イライラが減る内容を選ぼう。',
-    '⏰ 生活リズム':'決まった時間に寝起きできる内容を選ぼう。',
-    '▶︎ インタラクティブ':'動画やアプリで学びやすくなる内容を選ぼう。',
-    '🌱 環境':'紙の節約など環境にやさしい内容を選ぼう。',
-    '🗂 整理':'ノートの整理・検索がしやすい内容を選ぼう。',
-    '🎯 個別学習':'自分のレベルに合った練習ができる内容を選ぼう。',
-    '🍽 食べ過ぎ防止':'あとで食べ過ぎない・間食が減る内容を選ぼう。'
+    '⏱ 朝の時間':'観点：時間短縮（朝の準備が早くなる）',
+    '🎧 集中':'観点：集中力（授業中の注意の持続）',
+    '🤝 一体感':'観点：一体感（仲間意識・統一感）',
+    '🛡 安全':'観点：安全性（見分けやすさ・リスク低下）',
+    '⚖ 公平':'観点：公平性（流行やブランドの圧を下げる）',
+    '💪 健康':'観点：健康（体調の安定・病気予防）',
+    '⚡ エネルギー':'観点：エネルギー（活動のための力）',
+    '🌀 消化':'観点：消化（お腹の調子・負担の軽さ）',
+    '📈 成長':'観点：成長・回復（体づくり・休養）',
+    '🛡 免疫':'観点：免疫（かぜをひきにくい）',
+    '😊 機嫌':'観点：感情の安定（イライラ減少）',
+    '🙂 機嫌':'観点：感情の安定（イライラ減少）',
+    '⏰ 生活リズム':'観点：生活リズム（決まった就寝・起床）',
+    '▶︎ インタラクティブ':'観点：学習のやりとり（動画・アプリで理解）',
+    '🌱 環境':'観点：環境配慮（紙資源の節約）',
+    '🗂 整理':'観点：整理・検索（ノートが探しやすい）',
+    '🎯 個別学習':'観点：個別最適（自分のレベルに合う）',
+    '🍽 食べ過ぎ防止':'観点：食行動（あとで食べすぎを防ぐ）'
+  };
+  const HINT_Q_BY_TAG = {
+    '⏱ 朝の時間':'あなたの例は「朝の準備が早くなる」ことをはっきり示せている？',
+    '🎧 集中':'授業中に「注意がそれにくい／よく聞ける」ことが伝わる？',
+    '🤝 一体感':'「みんなでまとまる・同じ仲間だと感じる」ことを表している？',
+    '🛡 安全':'「見分けやすくなって安全になる」ことを説明できている？',
+    '⚖ 公平':'「服の違いで比べられにくい」ことが読み取れる？',
+    '💪 健康':'「体調が安定する／病気をへらす」根拠になっている？',
+    '⚡ エネルギー':'「活動のエネルギーが出る」ことにつながっている？',
+    '🌀 消化':'「お腹の負担が軽くなる／調子が良い」を示している？',
+    '📈 成長':'「体づくりや回復」に関係がある？',
+    '🛡 免疫':'「かぜをひきにくい」理由として自然？',
+    '😊 機嫌':'「気分が安定する／イライラが減る」を言えている？',
+    '🙂 機嫌':'「気分が安定する／イライラが減る」を言えている？',
+    '⏰ 生活リズム':'「決まった時間に寝起きできる」ことを示している？',
+    '▶︎ インタラクティブ':'「動画/アプリで理解が深まる」流れになっている？',
+    '🌱 環境':'「紙を使わない＝環境にやさしい」説明になっている？',
+    '🗂 整理':'「ノートをまとめやすい・探しやすい」を言えている？',
+    '🎯 個別学習':'「自分のレベルに合う練習ができる」例になっている？',
+    '🍽 食べ過ぎ防止':'「あとで食べすぎない」ことへちゃんと結びつく？'
   };
 
   /* ====== Helpers ====== */
@@ -284,7 +295,7 @@
   const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
   const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
   const esc = s => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
-  const lowerFirst = s => s ? s.replace(/[A-Za-z]/, ch => ch.toLowerCase()) : s; // 先頭の英字のみ小文字化
+  const lowerFirst = s => s ? s.replace(/[A-Za-z]/, ch => ch.toLowerCase()) : s;
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
   /* ====== State ====== */
@@ -303,7 +314,8 @@
     }
     state.questions = picks.map(k=>({
       topic:k, pickedReason:null, pickedExample:null,
-      confirmedStep1:false, exampleCorrect:false, _scored:false
+      confirmedStep1:false, exampleCorrect:false, _scored:false,
+      _exTries:0
     }));
     state.step = 0; state.score = 0;
   }
@@ -328,7 +340,7 @@
     updateCopyBox();
 
     $('#result').className='muted';
-    $('#result').textContent='STEP 1 → STEP 2 の順に完成させよう';
+    $('#result').textContent='① → ② の順に完成させよう';
   }
 
   function renderReasonUI(q, bank){
@@ -373,17 +385,16 @@
     $('#exampleMsg').textContent='';
   }
 
-  /* PREVIEW（下）：トピック先頭小文字化＋太字＋二重ピリオド防止 */
+  /* できた文（下）：トピック先頭小文字化＋太字＋二重ピリオド防止 */
   function updatePreview(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
-    const topicCore = cleanEnd(bank.topic);
-    const topicLower = lowerFirst(topicCore); // ここで小文字化
+    const topicLower = lowerFirst(cleanEnd(bank.topic));
     const rObj = q.pickedReason ? bank.reasons.find(x=>x.id===q.pickedReason) : null;
     const stripEnd = s => (s||'').replace(/[.。．]\s*$/,'');
     const rTxt = rObj ? `<b>${esc(stripEnd(rObj.text))}</b>` : '—';
 
-    let html = `<b>Preview:</b><br>${ensurePeriod(`First, ${esc(topicLower)} because ${rTxt}`)}`;
+    let html = `<b>できた文:</b><br>${ensurePeriod(`First, ${topicLower} because ${rTxt}`)}`;
 
     if(q.confirmedStep1){
       const exObj = q.pickedExample ? bank.examples.find(x=>x.id===q.pickedExample) : null;
@@ -400,7 +411,7 @@
     $('#pill-step2').className = 'pill ' + (q.confirmedStep1 ? (q.exampleCorrect ? 'done' : 'active') : '');
   }
 
-  /* 可視制御 + 「変更」ボタン */
+  /* 可視制御 + 「やり直す」ボタン */
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
@@ -423,7 +434,7 @@
     }
   }
 
-  /* まとめ：ジャンプボタンとコピー（完成分のみ） */
+  /* できた文：ジャンプボタンとコピー（完成分のみ） */
   function renderJumpList(){
     const box = $('#jumpList'); box.innerHTML = '';
     state.questions.forEach((q,i)=>{
@@ -431,7 +442,7 @@
       const btn = el('button','jumpbtn');
       const left = el('span'); left.textContent = `Q${i+1}: ${bank.topic}`;
       const right = el('span', q.exampleCorrect?'tag-ok':'tag-ng');
-      right.textContent = q.exampleCorrect ? '完成' : '未完成';
+      right.textContent = q.exampleCorrect ? '完成' : 'まだ';
       btn.appendChild(left); btn.appendChild(right);
       btn.addEventListener('click', ()=>{ state.step=i; render(); document.getElementById('quiz').scrollIntoView({behavior:'smooth', block:'start'}); });
       box.appendChild(btn);
@@ -443,7 +454,7 @@
     const ex = bank.examples.find(x=>x.id===q.pickedExample)?.text||'';
     const topicLower = lowerFirst(cleanEnd(bank.topic));
     const s1 = ensurePeriod(`First, ${topicLower} because ${cleanEnd(r)}`);
-    const s2 = ensurePeriod(`For example, ${ex}`);
+    const s2 = ensurePeriod(`For example, ${cleanEnd(ex)}`);
     return `Q${i+1}\n${s1}\n${s2}`;
   }
   function updateCopyBox(){
@@ -456,9 +467,10 @@
   function confirmStep1(){
     const q = state.questions[state.step];
     if(!q.pickedReason) return;
-    q.confirmedStep1 = true; // 正誤判定なしで確定
+    q.confirmedStep1 = true;
+    q._exTries = 0; // STEP2に入るのでリセット
     $('#reasonMsg').className='result ok';
-    $('#reasonMsg').textContent='✅ いいね！STEP 2 へ進もう';
+    $('#reasonMsg').textContent='✅ いいね！つぎは「たとえば」';
     updateStepVisibility(); renderExampleUI(q, BANK[q.topic]);
     document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'});
     updatePreview(); updatePills(); updateOkButtons();
@@ -474,16 +486,20 @@
       q.exampleCorrect = true;
       if(!(q._scored)) { q._scored = true; state.score += 1; }
       $('#exampleMsg').className='result ok';
-      $('#exampleMsg').textContent='✅ 正解！「次の問題へ」を押そう';
+      $('#exampleMsg').textContent='✅ できた！「つぎの問題へ」へ';
       document.querySelectorAll('#exampleArea .chip').forEach(b=>b.disabled=true);
       updateCopyBox(); renderJumpList();
     }else{
-      const belongTo = bank.reasons.find(r=>r.exId===q.pickedExample);
+      // —— デザート味：観点ヒント → 2回目以降は問いかけも追加
+      q._exTries = (q._exTries || 0) + 1;
       const current  = bank.reasons.find(r=>r.id===q.pickedReason);
-      const hint = HINT_BY_TAG[current?.tag] || '理由を証明する事実（時間・集中・健康など）に合う例を選ぼう。';
+      const hint1 = HINT_BY_TAG[current?.tag] || '観点：この理由をはっきり示す例にしよう。';
+      const qHint = HINT_Q_BY_TAG[current?.tag] || '';
       $('#exampleMsg').className='result bad';
       $('#exampleMsg').textContent =
-        `その例は「${belongTo?belongTo.tag:'別の理由'}」。今の理由は「${current?.tag}」。ヒント：${hint}`;
+        q._exTries === 1
+          ? `ちがうよ。今の理由は『${current?.tag}』だよ。${hint1}`
+          : `もう一歩！今の理由は『${current?.tag}』。${hint1} ${qHint}`;
     }
     updatePreview(); updatePills(); updateOkButtons();
   }
@@ -498,6 +514,7 @@
     q.confirmedStep1 = false;
     q.pickedExample = null;
     q.exampleCorrect = false;
+    q._exTries = 0;
     $('#exampleMsg').textContent = '';
     render();
     document.getElementById('reasonBlock').scrollIntoView({behavior:'smooth', block:'start'});
@@ -531,12 +548,21 @@
     speak(text){ if(!this.supported) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=this.rate; const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v; this.utter=u; speechSynthesis.speak(u); },
     stop(){ this.supported && speechSynthesis.cancel(); }
   };
-  function previewPlainText(){ return $('#previewText').innerText.replace(/^Preview:\s*/,'').trim(); }
+  function previewPlainText(){
+    return $('#previewText').innerText.replace(/^(Preview:|できた文:)\s*/,'').trim();
+  }
   const ttsBtn = $('#btn-tts');
   if(tts.supported){
     ttsBtn.addEventListener('click', ()=>{ if(!speechSynthesis.speaking){ tts.speak(previewPlainText()); } else { tts.stop(); } });
     $('#rate').addEventListener('input', ()=>{ if(speechSynthesis.speaking){ tts.speak(previewPlainText()); } });
-  } else { $('#ttsNote').textContent='（ブラウザがTTSに非対応）'; ttsBtn.disabled = true; $('#rate').disabled = true; }
+    // 一部ブラウザで声リストが遅延する対策
+    if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged === null) {
+      speechSynthesis.onvoiceschanged = () => {};
+    }
+  } else {
+    $('#ttsNote').textContent='（ブラウザがTTSに非対応）';
+    ttsBtn.disabled = true; $('#rate').disabled = true;
+  }
 </script>
 </body>
 </html>
