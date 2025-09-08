@@ -23,7 +23,7 @@
   .row{display:grid;gap:10px}
   .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 2px}
   .pill{background:#eef2ff;color:#1e293b;font-weight:700;padding:3px 10px;border-radius:999px;font-size:12px}
-  .pill.active{background:var(--accent);color:#fff}
+  .pill.active{background:#2563eb;color:#fff}
   .pill.done{background:#dcfce7;color:#065f46}
   .choice-wrap{display:flex;flex-wrap:wrap;gap:8px}
   .chip{padding:10px 12px;border:1px solid #e5e7eb;border-radius:999px;cursor:pointer;background:#fff;transition:transform .08s ease, background .15s ease, border-color .15s ease;color:var(--ink)}
@@ -34,7 +34,8 @@
   .chip.selected{ outline:2px solid var(--accent); background:#eff6ff; border-color:#bfdbfe }
 
   .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
-  .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:10px; flex-wrap:wrap}
+  .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .btn-icon{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px}
   .progress{height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .25s ease}
   .footer{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
@@ -46,13 +47,19 @@
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
   .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
 
-  /* 見出し：罫線でかわいく */
+  /* 見出し（かわいい罫線＋電球） */
   .topic-head{display:grid;gap:6px;margin-top:6px}
   .topic-title{font-weight:800;font-size:22px}
   .topic-subline{display:flex;align-items:center;gap:8px;color:#334155;font-weight:700}
   .topic-subline::before,.topic-subline::after{content:"";flex:1;height:1.5px;background:#e5e7eb;border-radius:999px}
 
   .okwrap{display:none;align-items:center;gap:10px;margin-top:10px}
+
+  /* まとめのチェックリスト */
+  .ans-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+  .ans-item.disabled{opacity:.6}
+  .ans-title{font-weight:700}
+  .ans-note{color:var(--muted);font-size:12px}
 
   @media (min-width:760px){ .chip{padding:12px 14px} }
   @media print{ header,.toolbar,.footer,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
@@ -61,7 +68,7 @@
 <body>
 <div class="container">
   <header>
-    <h1>🟨 Part 2｜Body 1 ビルダー（クイズ）</h1>
+    <h1>🟨 Body 1 ビルダークイズ</h1>
     <div class="toolbar">
       <button id="btn-reset" class="ghost">↺ リセット</button>
       <button id="btn-print" class="ghost">🖨️ 印刷</button>
@@ -78,18 +85,17 @@
 
     <div class="hr"></div>
 
-    <!-- ステップ表示 -->
+    <!-- ステップ表示（Previewバッジは削除） -->
     <div class="steps">
       <span class="pill" id="pill-step1">STEP 1: 理由</span>
       <span class="pill" id="pill-step2">STEP 2: たとえば</span>
-      <span class="pill" id="pill-preview">🔊 Preview</span>
     </div>
 
     <!-- 見出し -->
     <div class="topic-head">
       <div class="topic-title" id="topicText"></div>
       <div class="topic-subline">
-        <span>正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span>
+        <span>💡 正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span>
       </div>
     </div>
 
@@ -111,13 +117,13 @@
       <div id="exampleMsg" class="muted"></div>
     </div>
 
-    <!-- Preview（TTSは文の直下） -->
+    <!-- Preview（TTSは文の直下・アイコンのみ） -->
     <div class="row" style="margin-top:10px">
       <div class="preview">
         <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
         <div class="preview-actions">
-          <button id="btn-tts" class="secondary">🔊 読む</button>
-          <details><summary>オプション（速度）</summary>
+          <button id="btn-tts" class="secondary btn-icon" aria-label="読み上げ">🎧</button>
+          <details><summary>▶︎ オプション</summary>
             <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
           </details>
           <small id="ttsNote" class="muted"></small>
@@ -126,24 +132,26 @@
 
       <div class="okwrap" id="okWrap">
         <span class="muted">これでいい？</span>
-        <button id="btn-ok" class="primary" disabled>OK（STEP 2へ）</button>
+        <button id="btn-ok" class="primary" disabled>OK</button>
       </div>
     </div>
 
+    <!-- 下のフッター（別トピック/次へ）は撤去。結果メッセのみ残す -->
     <div class="footer">
       <div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div>
-      <button id="btn-randTopic" class="secondary">🎲 別トピック</button>
-      <button id="btn-next" class="primary" disabled>次へ →</button>
     </div>
   </div>
 
   <div class="hr"></div>
 
+  <!-- まとめ：チェックで選んでコピー -->
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
       <div style="font-weight:700">📜 まとめ（コピー用）</div>
       <button id="btn-copy" class="secondary">📋 コピー</button>
     </div>
+    <div class="muted" style="margin:.25rem 0 .5rem">コピーしたい問題にチェック✔︎</div>
+    <div id="answersList" class="row"></div>
     <div id="answers" class="copy-area" aria-live="polite"></div>
   </div>
 </div>
@@ -205,7 +213,7 @@
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
   // ====== State ======
-  const state = { step:0, questions:[], score:0, answers:[] };
+  const state = { step:0, questions:[], score:0, selectedForCopy: {} };
 
   function initQuestions(){
     let picks;
@@ -219,7 +227,7 @@
       picks = sampleDistinct(['A','B','C','D','E'], CONFIG.questionCount);
     }
     state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, confirmedStep1:false, _scored:false }));
-    state.step = 0; state.score = 0; state.answers = [];
+    state.step = 0; state.score = 0; state.selectedForCopy = {};
   }
 
   // ====== Render ======
@@ -237,10 +245,10 @@
     updatePills();
     updateStepVisibility();
     updateOkVisibility();
+    renderAnswersList(); // 下のチェックリスト更新
 
     $('#result').className = 'muted';
     $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
-    $('#btn-next').disabled = !(q.reasonCorrect && q.exampleCorrect);
   }
 
   function renderReasonUI(q){
@@ -251,7 +259,7 @@
       if(q.pickedReason === r.key) chip.classList.add('selected');
       chip.addEventListener('click', ()=>{
         if(q.confirmedStep1) return;
-        q.pickedReason = r.key; // 判定しない（OKまで）
+        q.pickedReason = r.key;
         $('#reasonArea').querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
         chip.classList.add('selected');
         $('#reasonMsg').className = 'muted';
@@ -290,52 +298,65 @@
       const ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
       html += `<br>${ensurePeriod(`For example, ${ex}`)}`;
     }
-    document.getElementById('previewText').innerHTML = html;
+    $('#previewText').innerHTML = html;
   }
 
   // STEP pills
   function updatePills(){
     const q = state.questions[state.step];
-    const p1 = document.getElementById('pill-step1');
-    const p2 = document.getElementById('pill-step2');
-    const p3 = document.getElementById('pill-preview');
-    p1.className = 'pill ' + (q.confirmedStep1 ? 'done' : 'active');
-    p2.className = 'pill ' + (q.confirmedStep1 ? (q.exampleCorrect ? 'done' : 'active') : '');
-    p3.className = 'pill ' + (q.exampleCorrect ? 'active' : '');
+    $('#pill-step1').className = 'pill ' + (q.confirmedStep1 ? 'done' : 'active');
+    $('#pill-step2').className = 'pill ' + (q.confirmedStep1 ? (q.exampleCorrect ? 'done' : 'active') : '');
   }
 
   // 可視制御
   function updateStepVisibility(){
     const q = state.questions[state.step];
-    const rb = document.getElementById('reasonBlock');
-    const grp = document.getElementById('reasonGroup');
-    const sum = document.getElementById('reasonSummary');
     if(q.confirmedStep1){
-      rb.style.display = 'none';
-      document.getElementById('reasonPickedText').textContent =
+      $('#reasonBlock').style.display = 'none';
+      $('#reasonPickedText').textContent =
         reasons.find(x=>x.key===q.pickedReason).text + `（${reasonMeta[q.pickedReason].tag}）`;
-      document.getElementById('exampleBlock').style.display = 'grid';
-      grp.style.display = 'grid';
-      sum.style.display = 'flex';
+      $('#exampleBlock').style.display = 'grid';
+      $('#reasonGroup').style.display = 'grid';
+      $('#reasonSummary').style.display = 'flex';
     }else{
-      rb.style.display = 'grid';
-      document.getElementById('exampleBlock').style.display = 'none';
-      grp.style.display = 'none';
+      $('#reasonBlock').style.display = 'grid';
+      $('#exampleBlock').style.display = 'none';
+      $('#reasonGroup').style.display = 'none';
     }
   }
 
-  // まとめ（コピー用）
-  function updateAnswersBox(){
-    const texts = state.questions.map((q,i)=>{
-      if(!(q.reasonCorrect && q.exampleCorrect)) return null;
-      const t = topics.find(x=>x.key===q.topic).text;
-      const r = reasons.find(x=>x.key===q.pickedReason).text;
-      const ex = examples.find(x=>x.key===q.pickedExample).text;
-      const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
-      const s2 = ensurePeriod(`For example, ${ex}`);
-      return `Q${i+1}\n${s1}\n${s2}`;
-    }).filter(Boolean);
-    document.getElementById('answers').textContent = texts.join('\n\n');
+  // まとめ：チェックリスト
+  function renderAnswersList(){
+    const box = $('#answersList'); box.innerHTML = '';
+    state.questions.forEach((q, i)=>{
+      const wrapper = el('label', 'ans-item' + (q.exampleCorrect ? '' : ' disabled'));
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.disabled = !q.exampleCorrect;
+      cb.checked = !!state.selectedForCopy[i];
+      cb.addEventListener('change', ()=>{ state.selectedForCopy[i] = cb.checked; updateAnswersText(); });
+      const title = el('span','ans-title'); title.textContent = `Q${i+1}`;
+      const note = el('span','ans-note'); note.textContent = topics.find(t=>t.key===q.topic).text;
+      wrapper.appendChild(cb); wrapper.appendChild(title); wrapper.appendChild(note);
+      box.appendChild(wrapper);
+    });
+    updateAnswersText();
+  }
+
+  function buildAnswerText(q, i){
+    const t = topics.find(x=>x.key===q.topic).text;
+    const r = reasons.find(x=>x.key===q.pickedReason).text;
+    const ex = examples.find(x=>x.key===q.pickedExample).text;
+    const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
+    const s2 = ensurePeriod(`For example, ${ex}`);
+    return `Q${i+1}\n${s1}\n${s2}`;
+  }
+  function updateAnswersText(){
+    const parts = [];
+    state.questions.forEach((q,i)=>{
+      if(state.selectedForCopy[i] && q.reasonCorrect && q.exampleCorrect){
+        parts.push(buildAnswerText(q,i));
+      }
+    });
+    $('#answers').textContent = parts.join('\n\n');
   }
 
   // 説明文
@@ -357,16 +378,16 @@
     if(ok){
       q.reasonCorrect = true;
       q.confirmedStep1 = true;
-      document.getElementById('reasonMsg').className = 'result ok';
-      document.getElementById('reasonMsg').textContent = '✅ 正解！STEP 2 へ進もう';
+      $('#reasonMsg').className = 'result ok';
+      $('#reasonMsg').textContent = '✅ 正解！STEP 2 へ進もう';
       updateStepVisibility();
-      renderExampleUI(q); // ← OK後にSTEP2の選択肢を描画
+      renderExampleUI(q);
       setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 30);
     }else{
       q.reasonCorrect = false;
       q.confirmedStep1 = false;
-      document.getElementById('reasonMsg').className = 'result bad';
-      document.getElementById('reasonMsg').textContent = explainWrongReason(q.topic, q.pickedReason);
+      $('#reasonMsg').className = 'result bad';
+      $('#reasonMsg').textContent = explainWrongReason(q.topic, q.pickedReason);
     }
     updatePreview(); updatePills(); updateOkVisibility();
   }
@@ -380,75 +401,66 @@
       q.exampleCorrect = true;
       document.querySelectorAll('#exampleArea .chip').forEach(b=>{ b.disabled = true; });
       chip.classList.add('ok','selected');
-      document.getElementById('exampleMsg').className = 'result ok';
-      document.getElementById('exampleMsg').textContent = '✅ 正解！Previewをきいて確認しよう';
+      $('#exampleMsg').className = 'result ok';
+      $('#exampleMsg').textContent = '✅ 正解！';
       if(!(q._scored)) { q._scored = true; state.score += 1; }
-      document.getElementById('btn-next').disabled = false;
-      document.getElementById('result').className='result ok';
-      document.getElementById('result').textContent='🎉 よくできました！「次へ」で続けよう';
-      updateAnswersBox();
+      updateAnswersText(); renderAnswersList();
+      // 自動で次の問題へ
+      if(state.step < state.questions.length-1){
+        setTimeout(()=>{ state.step++; render(); }, 1000);
+      }else{
+        $('#result').className='result ok';
+        $('#result').textContent='🎉 すべて終了！おつかれさま';
+      }
     } else {
       flashBad(chip);
-      document.getElementById('exampleMsg').className = 'result bad';
-      document.getElementById('exampleMsg').textContent = explainWrongExample(q.pickedReason, key);
+      $('#exampleMsg').className = 'result bad';
+      $('#exampleMsg').textContent = explainWrongExample(q.pickedReason, key);
     }
     updatePreview(); updatePills();
   }
 
   function updateOkVisibility(){
     const q = state.questions[state.step];
-    const okw = document.getElementById('okWrap');
-    const okbtn = document.getElementById('btn-ok');
+    const okw = $('#okWrap'), okbtn = $('#btn-ok');
     if(q.pickedReason && !q.confirmedStep1){ okw.style.display = 'flex'; okbtn.disabled = false; }
     else { okw.style.display = 'none'; okbtn.disabled = true; }
   }
-  document.getElementById('btn-ok').addEventListener('click', confirmStep1);
+  $('#btn-ok').addEventListener('click', confirmStep1);
 
-  function next(){
-    if(state.step < state.questions.length-1){ state.step++; render(); }
-    else { document.getElementById('result').className='result ok'; document.getElementById('result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); updatePills(); }
-  }
-
-  function randomizeTopic(){
-    const q = state.questions[state.step];
-    const pool = ['A','B','C','D','E'].filter(k=>k!==q.topic);
-    q.topic = pool[Math.floor(Math.random()*pool.length)];
-    q.pickedReason=null; q.pickedExample=null; q.reasonCorrect=false; q.exampleCorrect=false; q.confirmedStep1=false; q._scored=false;
-    render();
-  }
-
-  function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; document.getElementById('bar').style.width = pct + '%'; }
-  function resetAll(){ initQuestions(); render(); updateBar(); updateAnswersBox(); }
+  function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('.bar').style.width = pct + '%'; }
+  function resetAll(){ initQuestions(); render(); updateBar(); }
 
   // ====== TTS ======
   const tts = {
     supported: 'speechSynthesis' in window, utter: null,
-    get rate(){ return parseFloat(document.getElementById('rate').value || '1'); },
+    get rate(){ return parseFloat($('#rate').value || '1'); },
     speak(text){ if(!this.supported) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=this.rate; const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v; this.utter=u; speechSynthesis.speak(u); },
     stop(){ this.supported && speechSynthesis.cancel(); }
   };
-  function previewPlainText(){ return document.getElementById('previewText').innerText.replace(/^Preview:\s*/,'').trim(); }
+  function previewPlainText(){ return $('#previewText').innerText.replace(/^Preview:\s*/,'').trim(); }
 
   // ====== Init & binds ======
   initQuestions(); render();
-  document.getElementById('btn-next').addEventListener('click', next);
-  document.getElementById('btn-randTopic').addEventListener('click', randomizeTopic);
-  document.getElementById('btn-reset').addEventListener('click', resetAll);
-  document.getElementById('btn-print').addEventListener('click', ()=> window.print());
-  document.getElementById('btn-copy').addEventListener('click', ()=>{ const t=document.getElementById('answers').textContent.trim(); if(!t) return; navigator.clipboard.writeText(t); });
+  $('#btn-reset').addEventListener('click', resetAll);
+  $('#btn-print').addEventListener('click', ()=> window.print());
+  $('#btn-copy').addEventListener('click', ()=>{
+    const t=$('#answers').textContent.trim(); if(!t) return;
+    navigator.clipboard.writeText(t);
+  });
 
-  const ttsBtn = document.getElementById('btn-tts');
+  const ttsBtn = $('#btn-tts');
   if(tts.supported){
     ttsBtn.addEventListener('click', ()=>{
-      if(!speechSynthesis.speaking){ tts.speak(previewPlainText()); ttsBtn.textContent='⏹ 停止'; }
-      else { tts.stop(); ttsBtn.textContent='🔊 読む'; }
+      if(!speechSynthesis.speaking){ tts.speak(previewPlainText()); }
+      else { tts.stop(); }
     });
-    document.getElementById('rate').addEventListener('input', ()=>{
-      if(speechSynthesis.speaking){ tts.speak(previewPlainText()); ttsBtn.textContent='⏹ 停止'; }
+    $('#rate').addEventListener('input', ()=>{
+      if(speechSynthesis.speaking){ tts.speak(previewPlainText()); }
     });
   } else {
-    document.getElementById('ttsNote').textContent='（ブラウザがTTSに非対応）';
-    ttsBtn.disabled = true; document.getElementById('rate').disabled = true;
+    $('#ttsNote').textContent='（ブラウザがTTSに非対応）';
+    ttsBtn.disabled = true; $('#rate').disabled = true;
   }
 </script>
 </body>
