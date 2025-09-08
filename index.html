@@ -40,9 +40,11 @@
   .result{font-weight:700}.result.ok{color:var(--ok)}.result.bad{color:var(--bad)}
   .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
   details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
+
   /* STEP1の答え要約（STEP2ヘッダの下に出す） */
   .summary-line{display:none;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:8px 10px}
   .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .hint{color:#166534;font-weight:700}
   @media (min-width:760px){ .chip{padding:12px 14px} }
   @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
@@ -88,12 +90,10 @@
     <!-- STEP2 -->
     <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
       <div style="font-weight:700">STEP 2｜その理由に合う たとえば を選ぼう</div>
-      <!-- ここに STEP1 の要約を表示（変更ボタンは撤廃） -->
       <div id="reasonSummary" class="summary-line">
         <span class="tag">✓ 理由</span>
         <span id="reasonPickedText"></span>
       </div>
-
       <div id="exampleArea" class="choice-wrap"></div>
       <div id="exampleMsg" class="muted">タップして選択</div>
     </div>
@@ -152,17 +152,43 @@
     { key:'4', text:'it keeps us healthy.' },
     { key:'5', text:'it speeds up research.' },
   ];
-  // 例文（i〜vは表示しない）
+
+  /* 例文（A2〜B1 へ少しレベルアップ） */
   const examples = [
-    { key:'i',  text:'I can concentrate in class.' },          // 1: focus
-    { key:'ii', text:'I feel awake in the morning.' },          // 2: energy
-    { key:'iii',text:'We can get ready faster.' },              // 3: save time
-    { key:'iv', text:'I don’t get sick often.' },               // 4: healthy
-    { key:'v',  text:'We can look up information in seconds.' } // 5: research
+    { key:'i',  text:'I can stay focused in class.' },           // 1: focus
+    { key:'ii', text:'I feel more awake in the morning.' },       // 2: energy
+    { key:'iii',text:'We can get ready more quickly.' },          // 3: time
+    { key:'iv', text:'I rarely catch colds.' },                   // 4: health
+    { key:'v',  text:'We can look up information in seconds.' }   // 5: research
   ];
-  // E は 2,4
-  const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
+
+  // 理由⇔例の対応
   const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
+  // トピックごとの正答理由
+  const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','4'] };
+
+  /* 小学生向けの短いヒント */
+  const reasonMeta = {
+    '1': {tag:'🎧 集中', hint:'授業に集中できる／気が散りにくい'},
+    '2': {tag:'⚡ 元気', hint:'朝に元気・目がさめる'},
+    '3': {tag:'⏱ 朝の時間', hint:'支度がはやい・時間の節約'},
+    '4': {tag:'💪 健康', hint:'病気になりにくい・体が元気'},
+    '5': {tag:'🔎 調べる速さ', hint:'言葉や情報をすぐ調べられる'}
+  };
+  const topicWhy = {
+    'A':'制服だと毎朝の服えらびがいらず、見た目の差も小さくて気が散りにくい。',
+    'B':'野菜は体の調子をととのえ、病気をへらす助けになる。',
+    'C':'早く寝ると次の朝に元気で、授業でも集中しやすい。',
+    'D':'タブレットなら言葉や情報をすぐ調べられて、学習が進む。',
+    'E':'朝ごはんでエネルギーが手に入り、体も元気になる。'
+  };
+  const altExample = { // ヒントとして出す候補
+    '1':'I can stay focused in class.',
+    '2':'I feel more awake in the morning.',
+    '3':'We can get ready more quickly.',
+    '4':'I rarely catch colds.',
+    '5':'We can look up information in seconds.'
+  };
 
   // ====== Helpers ======
   const $ = s => document.querySelector(s);
@@ -227,7 +253,7 @@
     block.style.display='grid';
     examples.forEach(ex=>{
       const chip = el('button','chip'); chip.type='button';
-      chip.textContent = ex.text;                     // ← i〜vを出さない
+      chip.textContent = ex.text; // i〜vは表示しない
       if(q.exampleCorrect) chip.disabled = true;
       chip.addEventListener('click', ()=> onPickExample(ex.key, chip));
       wrap.appendChild(chip);
@@ -262,7 +288,8 @@
     const sum = $('#reasonSummary');
     if(q.reasonCorrect){
       rb.style.display = 'none';
-      $('#reasonPickedText').textContent = reasons.find(x=>x.key===q.pickedReason).text;
+      $('#reasonPickedText').textContent = reasons.find(x=>x.key===q.pickedReason).text + 
+        `（${reasonMeta[q.pickedReason].tag}）`;
       sum.style.display = 'flex';
       $('#exampleBlock').style.display = 'grid';
     }else{
@@ -274,6 +301,16 @@
   // ====== Interactions ======
   function flashBad(node){ node.classList.add('bad','flash'); setTimeout(()=>node.classList.remove('flash'), 600); }
 
+  function explainWrongReason(topicKey, chosenReasonKey){
+    const correctTags = (correctReasonsByTopic[topicKey]||[]).map(k=>reasonMeta[k].tag).join(' / ');
+    return `その理由だと話がずれるよ。${topicWhy[topicKey]} だから、ポイントは ${correctTags}。今えらんだのは「${reasonMeta[chosenReasonKey].tag}」。もう一度考えよう。`;
+  }
+
+  function explainWrongExample(pickedReasonKey, pickedExampleKey){
+    const exBelongsTo = Object.entries(exampleByReason).find(([r,e])=>e===pickedExampleKey)?.[0];
+    return `その例は「${reasonMeta[exBelongsTo].tag}」の話。今の理由は「${reasonMeta[pickedReasonKey].tag}」。つながっていないね。ヒント：例）${altExample[pickedReasonKey]}`;
+  }
+
   function onPickReason(key, chip){
     const q = state.questions[state.step];
     const ok = (correctReasonsByTopic[q.topic]||[]).includes(key);
@@ -283,14 +320,14 @@
       $('#reasonArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
       chip.classList.add('ok','selected');
       $('#reasonMsg').className = 'result ok';
-      $('#reasonMsg').textContent = '✅ 正解！つづいて「たとえば」を選ぼう';
+      $('#reasonMsg').innerHTML = `✅ 正解！<span class="hint">ヒント：</span>${topicWhy[q.topic]}`;
       renderExampleUI(q);
       updateStepVisibility();
       setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 40);
     } else {
       flashBad(chip);
       $('#reasonMsg').className = 'result bad';
-      $('#reasonMsg').textContent = '❌ このトピックには合わないよ。もう一度！';
+      $('#reasonMsg').textContent = explainWrongReason(q.topic, key);
     }
     updatePreview(); updatePills();
   }
@@ -313,7 +350,7 @@
     } else {
       flashBad(chip);
       $('#exampleMsg').className = 'result bad';
-      $('#exampleMsg').textContent = '❌ その「たとえば」は選んだ理由に合わないよ。';
+      $('#exampleMsg').textContent = explainWrongExample(q.pickedReason, key);
     }
     updatePreview(); updatePills();
   }
@@ -332,7 +369,6 @@
   }
 
   function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
-
   function resetAll(){ initQuestions(); render(); updateBar(); }
 
   // ====== TTS（トグル） ======
