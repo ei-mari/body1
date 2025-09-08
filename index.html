@@ -1,431 +1,369 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ + TTS）</title>
-  <style>
-    :root{
-      --bg:#f7f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280;
-      --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626;
-      --radius:16px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Noto Sans JP",Helvetica,Arial,sans-serif;
-      background:var(--bg); color:var(--ink);
-    }
-    .container{max-width:900px; margin:0 auto; padding:clamp(16px,3vw,28px);}
-    header{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px}
-    h1{font-size:clamp(20px,4.6vw,28px); margin:0; letter-spacing:.2px}
-    .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-    button{
-      border:0; background:var(--accent); color:#fff; padding:10px 14px;
-      border-radius:12px; font-weight:600; cursor:pointer; box-shadow:0 1px 0 rgba(0,0,0,.08);
-    }
-    button.secondary{background:#e5e7eb; color:#111827}
-    button.ghost{background:transparent; color:var(--accent); padding:8px 10px}
-    button.ok{background:var(--ok)}  button.bad{background:var(--bad)}
-    button:focus{outline:2px solid var(--ring); outline-offset:2px}
-
-    .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 8px 24px rgba(2,6,23,.06);}
-    .muted{color:var(--muted)} .hr{height:1px; background:#e5e7eb; margin:16px 0}
-    .row{display:grid; gap:10px}
-    .topic{font-weight:700; font-size:18px;}
-    .badge{display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:4px 10px; border-radius:999px; font-size:12px}
-
-    .helper{background:#eef2ff; border:1px dashed #c7d2fe; color:#1e293b; padding:10px 12px; border-radius:12px; font-size:14px}
-    .helper ol{margin:6px 0 0 18px; padding:0}
-    .helper li{margin:4px 0}
-
-    .step-title{display:flex; align-items:center; gap:8px; font-weight:700}
-    .step-pill{background:#e5e7eb; color:#111827; font-weight:700; padding:2px 10px; border-radius:999px; font-size:12px}
-
-    .choice-wrap{display:flex; flex-wrap:wrap; gap:8px}
-    .chip{
-      padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px;
-      cursor:pointer; background:#fff; transition:all .15s ease; color:var(--ink);
-    }
-    .chip[disabled]{opacity:.55; cursor:not-allowed}
-    .chip.ok{background:#dcfce7; border-color:#86efac}
-    .chip.bad{background:#fee2e2; border-color:#fecaca}
-
-    .preview{background:#f1f5f9; border-radius:12px; padding:12px; font-size:15px}
-    .preview b{color:#0f172a}
-
-    .tts{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
-    .tts small{color:var(--muted)}
-    .tts input[type=range]{width:160px}
-
-    .footer{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:10px}
-    .result{display:flex; align-items:center; gap:8px; font-weight:700}
-    .result.ok{color:var(--ok)} .result.bad{color:var(--bad)}
-    .copy-area{white-space:pre-wrap; background:#0b1020; color:#e2e8f0; padding:12px; border-radius:12px; font-size:14px}
-
-    @media (min-width: 760px){
-      .choice-wrap{gap:10px}
-      .chip{padding:12px 14px}
-    }
-    @media print{
-      header,.toolbar,.footer,.tts{display:none!important}
-      body{background:#fff} .card{box-shadow:none; border:1px solid #e5e7eb}
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ + TTS）</title>
+<style>
+  :root{
+    --bg:#f7f7fb; --card:#ffffff; --ink:#0f172a; --muted:#6b7280;
+    --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626;
+    --radius:16px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,"Noto Sans JP",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--ink)}
+  .container{max-width:900px; margin:0 auto; padding:clamp(16px,3vw,28px)}
+  header{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px}
+  h1{font-size:clamp(20px,4.6vw,28px); margin:0}
+  .toolbar{display:flex; gap:8px}
+  button{border:0; background:var(--accent); color:#fff; padding:10px 14px; border-radius:12px; font-weight:600; cursor:pointer; box-shadow:0 1px 0 rgba(0,0,0,.08)}
+  button.secondary{background:#e5e7eb; color:#111827}
+  button.ghost{background:transparent; color:var(--accent); padding:8px 10px}
+  button.primary{background:var(--accent); color:#fff}
+  button:focus{outline:2px solid var(--ring); outline-offset:2px}
+  .badge{display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:4px 10px; border-radius:999px; font-size:12px}
+  .muted{color:var(--muted)} .hr{height:1px; background:#e5e7eb; margin:12px 0}
+  .card{background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:0 8px 24px rgba(2,6,23,.06)}
+  .row{display:grid; gap:10px}
+  .topic{font-weight:800; font-size:20px}
+  .steps{display:flex; gap:6px; flex-wrap:wrap; margin:4px 0 2px}
+  .pill{background:#eef2ff; color:#1e293b; font-weight:700; padding:3px 10px; border-radius:999px; font-size:12px}
+  .choice-wrap{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px; cursor:pointer; background:#fff; transition:transform .08s ease, background .15s ease, border-color .15s ease; color:var(--ink)}
+  .chip:hover{transform:translateY(-1px)}
+  .chip[disabled]{opacity:.55; cursor:not-allowed; transform:none}
+  .chip.ok.selected{background:#dcfce7; border-color:#86efac}
+  .chip.bad.flash{background:#fee2e2; border-color:#fecaca}
+  .preview{background:#f1f5f9; border-radius:12px; padding:12px; font-size:15px}
+  .preview b{color:#0f172a}
+  .tts{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px}
+  .progress{height:6px; background:#e5e7eb; border-radius:999px; overflow:hidden}
+  .bar{height:100%; width:0%; background:linear-gradient(90deg,#60a5fa,#2563eb); transition:width .25s ease}
+  .footer{display:flex; gap:8px; justify-content:flex-end; align-items:center; flex-wrap:wrap; margin-top:10px}
+  .result{font-weight:700} .result.ok{color:var(--ok)} .result.bad{color:var(--bad)}
+  .copy-area{white-space:pre-wrap; background:#0b1020; color:#e2e8f0; padding:12px; border-radius:12px; font-size:14px}
+  details{margin-top:4px}
+  summary{cursor:pointer; color:var(--muted)}
+  @media (min-width:760px){ .chip{padding:12px 14px} }
+  @media print{ header,.toolbar,.footer,.tts,details{display:none!important} body{background:#fff} .card{box-shadow:none; border:1px solid #e5e7eb} }
+</style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>🟨 Part 2｜Body 1 ビルダー（クイズ）</h1>
-      <div class="toolbar">
-        <button id="btn-reset" class="ghost" title="最初から">↺ リセット</button>
-        <button id="btn-print" class="ghost" title="印刷（配布用）">🖨️ 印刷</button>
-      </div>
-    </header>
+<div class="container">
+  <header>
+    <h1>🟨 Part 2｜Body 1 ビルダー（クイズ）</h1>
+    <div class="toolbar">
+      <button id="btn-reset" class="ghost">↺ リセット</button>
+      <button id="btn-print" class="ghost">🖨️ 印刷</button>
+    </div>
+  </header>
 
-    <div id="quiz" class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
-        <div class="badge">Q<span id="qnum">1</span> / <span id="qtotal">3</span></div>
-        <div class="muted">正解数：<b id="score">0</b></div>
-      </div>
+  <div class="progress"><div id="bar" class="bar"></div></div>
 
-      <div class="hr"></div>
-
-      <!-- やること案内 -->
-      <div class="helper">
-        <b>やること</b>
-        <ol>
-          <li><b>トピック</b>を読み、正しい<b>理由（1〜5）</b>を1つ選ぶ。</li>
-          <li>その理由に合う<b>たとえば（i〜v）</b>を1つ選ぶ。</li>
-          <li>下の<b>Preview</b>を<span style="font-weight:700">きく</span>（🔊）→ 声に出して読んでみる。</li>
-        </ol>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div class="topic" id="topicText"></div>
-      </div>
-
-      <div class="row" style="margin-top:6px">
-        <div class="step-title"><span class="step-pill">STEP 1</span> 適切な <u>理由（1〜5）</u> を選ぼう</div>
-        <div id="reasonArea" class="choice-wrap"></div>
-        <div id="reasonMsg" class="result muted">選択するとすぐ判定します</div>
-      </div>
-
-      <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
-        <div class="step-title"><span class="step-pill">STEP 2</span> その理由に合う <u>たとえば（i〜v）</u> を選ぼう</div>
-        <div id="exampleArea" class="choice-wrap"></div>
-        <div id="exampleMsg" class="result muted">選択するとすぐ判定します</div>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
-        <div class="tts" id="ttsWrap">
-          <button id="btn-speak" class="secondary">🔊 再生</button>
-          <button id="btn-pause" class="secondary">⏸ 一時停止</button>
-          <button id="btn-resume" class="secondary">▶ 再開</button>
-          <button id="btn-stop" class="secondary">⏹ 停止</button>
-          <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
-          <small id="ttsNote" class="muted"></small>
-        </div>
-      </div>
-
-      <div class="footer">
-        <div id="result" class="result muted">STEP 1 → STEP 2 の順に正解しよう</div>
-        <button id="btn-randTopic" class="secondary" title="この問だけ別トピックに">🎲 別トピック</button>
-        <button id="btn-next" class="ghost" disabled>次へ →</button>
-      </div>
+  <div id="quiz" class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+      <div class="badge">Q<span id="qnum">1</span> / <span id="qtotal">3</span></div>
+      <div class="muted">正解数：<b id="score">0</b></div>
     </div>
 
     <div class="hr"></div>
 
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
-        <div style="font-weight:700">📜 まとめ（コピー用）</div>
-        <button id="btn-copy" class="secondary">📋 コピー</button>
+    <!-- タスク案内（コンパクト） -->
+    <div class="steps">
+      <span class="pill">STEP 1: 理由を選ぶ</span>
+      <span class="pill">STEP 2: たとえばを選ぶ</span>
+      <span class="pill">🔊 Preview をきく</span>
+    </div>
+
+    <div class="row" style="margin-top:6px">
+      <div class="topic" id="topicText"></div>
+    </div>
+
+    <div class="row" style="margin-top:4px">
+      <div style="font-weight:700">STEP 1｜理由（1〜5）を選ぼう</div>
+      <div id="reasonArea" class="choice-wrap"></div>
+      <div id="reasonMsg" class="muted">タップして選択</div>
+    </div>
+
+    <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
+      <div style="font-weight:700">STEP 2｜その理由に合う たとえば（i〜v）を選ぼう</div>
+      <div id="exampleArea" class="choice-wrap"></div>
+      <div id="exampleMsg" class="muted">タップして選択</div>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
+      <div class="tts">
+        <button id="btn-tts" class="secondary">🔊 読む</button>
+        <details>
+          <summary>オプション（速度）</summary>
+          <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
+        </details>
+        <small id="ttsNote" class="muted"></small>
       </div>
-      <div id="answers" class="copy-area" aria-live="polite"></div>
+    </div>
+
+    <div class="footer">
+      <div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div>
+      <button id="btn-randTopic" class="secondary">🎲 別トピック</button>
+      <button id="btn-next" class="primary" disabled>次へ →</button>
     </div>
   </div>
 
-  <script>
-    // ====== Config ======
-    const CONFIG = {
-      questionCount: 3,
-      ui: 'buttons',             // 'buttons' | 'dropdown'（?ui=dropdown でも切替可）
-      topicMode: 'auto',         // 'auto' | 'preset'
-      presetTopics: ['A','C','E']
-    };
+  <div class="hr"></div>
 
-    // URL: ?topics=A,C,E でプリセット出題、?ui=dropdown でプルダウンUI
-    (function(){
-      const sp = new URLSearchParams(location.search);
-      const m = sp.get('topics');
-      if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
-      const ui = sp.get('ui');
-      if(ui && /^(buttons|dropdown)$/.test(ui)) CONFIG.ui = ui;
-    })();
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:8px">
+      <div style="font-weight:700">📜 まとめ（コピー用）</div>
+      <button id="btn-copy" class="secondary">📋 コピー</button>
+    </div>
+    <div id="answers" class="copy-area" aria-live="polite"></div>
+  </div>
+</div>
 
-    // ====== Data ======
-    const topics = [
-      { key:'A', text:'Students should wear school uniforms.' },
-      { key:'B', text:'Eating vegetables is important.' },
-      { key:'C', text:'Going to bed early is a good habit.' },
-      { key:'D', text:'Using tablets in class is helpful.' },
-      { key:'E', text:'Eating breakfast is important.' },
-    ];
-    const reasons = [
-      { key:'1', text:'it helps us focus.' },
-      { key:'2', text:'it gives us more energy.' },
-      { key:'3', text:'it saves time in the morning.' },
-      { key:'4', text:'it keeps us healthy.' },
-      { key:'5', text:'it speeds up research.' },
-    ];
-    const examples = [
-      { key:'i',  text:'I/we can listen well in class.' },
-      { key:'ii', text:'I don’t feel sleepy in the morning.' },
-      { key:'iii',text:'We don’t waste time choosing clothes.' },
-      { key:'iv', text:'I don’t catch colds often.' },
-      { key:'v',  text:'We can look up words in seconds.' },
-    ];
+<script>
+  // ====== Config ======
+  const CONFIG = { questionCount: 3, topicMode: 'auto', presetTopics: ['A','C','E'] };
+  (function(){
+    const sp = new URLSearchParams(location.search);
+    const m = sp.get('topics');
+    if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
+  })();
 
-    // 正答ルール
-    const correctReasonsByTopic = {
-      'A': ['1','3'],
-      'B': ['4'],
-      'C': ['2','1'],
-      'D': ['5','1'],
-      'E': ['2','3'],
-    };
-    const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
+  // ====== Data ======
+  const topics = [
+    { key:'A', text:'Students should wear school uniforms.' },
+    { key:'B', text:'Eating vegetables is important.' },
+    { key:'C', text:'Going to bed early is a good habit.' },
+    { key:'D', text:'Using tablets in class is helpful.' },
+    { key:'E', text:'Eating breakfast is important.' },
+  ];
+  const reasons = [
+    { key:'1', text:'it helps us focus.' },
+    { key:'2', text:'it gives us more energy.' },
+    { key:'3', text:'it saves time in the morning.' },
+    { key:'4', text:'it keeps us healthy.' },
+    { key:'5', text:'it speeds up research.' },
+  ];
+  const examples = [
+    { key:'i',  text:'I/we can listen well in class.' },
+    { key:'ii', text:'I don’t feel sleepy in the morning.' },
+    { key:'iii',text:'We don’t waste time choosing clothes.' },
+    { key:'iv', text:'I don’t catch colds often.' },
+    { key:'v',  text:'We can look up words in seconds.' },
+  ];
+  const correctReasonsByTopic = { 'A':['1','3'], 'B':['4'], 'C':['2','1'], 'D':['5','1'], 'E':['2','3'] };
+  const exampleByReason = { '1':'i','2':'ii','3':'iii','4':'iv','5':'v' };
 
-    // ====== Helpers ======
-    const $ = sel => document.querySelector(sel);
-    const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
-    const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
-    const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,''); // 末尾のピリオド等を除去
-    function sampleDistinct(arr, n){ const copy=[...arr]; const out=[]; while(out.length<n && copy.length){ out.push(copy.splice(Math.floor(Math.random()*copy.length),1)[0]); } return out; }
+  // ====== Helpers ======
+  const $ = s => document.querySelector(s);
+  const el = (t,c) => { const e=document.createElement(t); if(c) e.className=c; return e; };
+  const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
+  const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
+  function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
-    // ====== State ======
-    const state = { step:0, questions:[], score:0, answers:[] };
+  // ====== State ======
+  const state = { step:0, questions:[], score:0, answers:[] };
 
-    function initQuestions(){
-      let picks;
-      if(CONFIG.topicMode==='preset'){
-        picks = CONFIG.presetTopics.slice(0, CONFIG.questionCount);
-        if(picks.length < CONFIG.questionCount){
-          const rest = ['A','B','C','D','E'].filter(k=>!picks.includes(k));
-          picks = picks.concat(sampleDistinct(rest, CONFIG.questionCount-picks.length));
-        }
-      } else {
-        picks = sampleDistinct(['A','B','C','D','E'], CONFIG.questionCount);
+  function initQuestions(){
+    let picks;
+    if(CONFIG.topicMode==='preset'){
+      picks = CONFIG.presetTopics.slice(0, CONFIG.questionCount);
+      if(picks.length < CONFIG.questionCount){
+        const rest = ['A','B','C','D','E'].filter(k=>!picks.includes(k));
+        picks = picks.concat(sampleDistinct(rest, CONFIG.questionCount-picks.length));
       }
-      state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, _scored:false }));
-      state.step = 0; state.score = 0; state.answers = [];
-    }
-
-    // ====== Render ======
-    function render(){
-      const q = state.questions[state.step];
-      $('#qnum').textContent = (state.step+1);
-      $('#qtotal').textContent = state.questions.length;
-      $('#score').textContent = state.score;
-      $('#topicText').textContent = topics.find(t=>t.key===q.topic).text;
-
-      renderReasonUI(q);
-      renderExampleUI(q);
-      updatePreview();
-
-      $('#result').className = 'result muted';
-      $('#result').textContent = 'STEP 1 → STEP 2 の順に正解しよう';
-      $('#btn-next').disabled = !(q.reasonCorrect && q.exampleCorrect);
-    }
-
-    function renderReasonUI(q){
-      const rWrap = $('#reasonArea'); rWrap.innerHTML='';
-      if(CONFIG.ui==='buttons'){
-        const row = el('div','choice-wrap');
-        reasons.forEach(r=>{
-          const chip = el('button','chip'); chip.type='button'; chip.textContent = `${r.key}. ${r.text}`;
-          if(q.reasonCorrect) chip.disabled = true;
-          chip.addEventListener('click', ()=> onPickReason(r.key, chip));
-          row.appendChild(chip);
-        });
-        rWrap.appendChild(row);
-      } else {
-        const sel = el('select'); sel.innerHTML = `<option value="">理由を選択</option>` + reasons.map(r=>`<option value="${r.key}">${r.key}. ${r.text}</option>`).join('');
-        sel.value = q.pickedReason || '';
-        sel.addEventListener('change', e=> onPickReason(e.target.value, sel));
-        rWrap.appendChild(sel);
-      }
-      $('#reasonMsg').className = 'result muted';
-      $('#reasonMsg').textContent = '選択するとすぐ判定します';
-    }
-
-    function renderExampleUI(q){
-      const eBlock = $('#exampleBlock');
-      const eWrap = $('#exampleArea'); eWrap.innerHTML='';
-      if(q.reasonCorrect){
-        eBlock.style.display='grid';
-        if(CONFIG.ui==='buttons'){
-          const row = el('div','choice-wrap');
-          examples.forEach(ex=>{
-            const chip = el('button','chip'); chip.type='button'; chip.textContent = `${ex.key}. ${ex.text}`;
-            if(q.exampleCorrect) chip.disabled = true;
-            chip.addEventListener('click', ()=> onPickExample(ex.key, chip));
-            row.appendChild(chip);
-          });
-          eWrap.appendChild(row);
-        } else {
-          const sel = el('select'); sel.innerHTML = `<option value="">たとえばを選択</option>` + examples.map(ex=>`<option value="${ex.key}">${ex.key}. ${ex.text}</option>`).join('');
-          sel.value = q.pickedExample || '';
-          sel.addEventListener('change', e=> onPickExample(e.target.value, sel));
-          eWrap.appendChild(sel);
-        }
-        $('#exampleMsg').className = 'result muted';
-        $('#exampleMsg').textContent = '選択するとすぐ判定します';
-      } else {
-        eBlock.style.display='none';
-      }
-    }
-
-    function updatePreview(){
-      const q = state.questions[state.step];
-      const t0 = topics.find(x=>x.key===q.topic).text;
-      const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
-      let ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
-      // TTSで自然にするため i) の "I/we" は "I" に変換
-      if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
-      const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
-      const s2 = ensurePeriod(`For example, ${ex}`);
-      $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
-    }
-
-    // ====== Interactions ======
-    function onPickReason(key, node){
-      if(!key) return;
-      const q = state.questions[state.step];
-      const ok = (correctReasonsByTopic[q.topic]||[]).includes(key);
-      q.pickedReason = key;
-      if(ok){
-        q.reasonCorrect = true; markAll($('#reasonArea'), 'ok');
-        $('#reasonMsg').className = 'result ok';
-        $('#reasonMsg').textContent = '✅ 正解！次は「たとえば」を選ぼう';
-        renderExampleUI(q);
-      }else{
-        if(node && node.classList) node.classList.add('bad');
-        $('#reasonMsg').className = 'result bad';
-        $('#reasonMsg').textContent = '❌ その理由はこのトピックに合いません。もう一度！';
-      }
-      updatePreview();
-    }
-
-    function onPickExample(key, node){
-      if(!key) return;
-      const q = state.questions[state.step];
-      const must = exampleByReason[q.pickedReason];
-      q.pickedExample = key;
-      const ok = (key === must);
-      if(ok){
-        q.exampleCorrect = true; markAll($('#exampleArea'), 'ok');
-        $('#exampleMsg').className = 'result ok';
-        $('#exampleMsg').textContent = '✅ 正解！プレビューを確認しよう';
-        if(!(q._scored)) { q._scored = true; state.score += 1; }
-        $('#btn-next').disabled = false;
-        updateAnswersBox();
-        $('#result').className='result ok';
-        $('#result').textContent='🎉 よくできました！「次へ」で続けよう';
-      } else {
-        if(node && node.classList) node.classList.add('bad');
-        $('#exampleMsg').className = 'result bad';
-        $('#exampleMsg').textContent = '❌ その「たとえば」は選んだ理由に合いません。';
-      }
-      updatePreview();
-    }
-
-    function markAll(area, cls){
-      area.querySelectorAll('.chip, select').forEach(b=>{ b.classList && b.classList.add(cls); b.disabled = true; });
-    }
-
-    function next(){
-      if(state.step < state.questions.length-1){ state.step++; render(); }
-      else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; }
-    }
-
-    function randomizeTopic(){
-      const q = state.questions[state.step];
-      const pool = ['A','B','C','D','E'].filter(k=>k!==q.topic);
-      q.topic = pool[Math.floor(Math.random()*pool.length)];
-      q.pickedReason=null; q.pickedExample=null; q.reasonCorrect=false; q.exampleCorrect=false; q._scored=false;
-      render();
-    }
-
-    function updateAnswersBox(){
-      const texts = state.questions.map((q,i)=>{
-        if(!(q.reasonCorrect && q.exampleCorrect)) return null;
-        const t = topics.find(x=>x.key===q.topic).text;
-        const r = reasons.find(x=>x.key===q.pickedReason).text;
-        let ex = examples.find(x=>x.key===q.pickedExample).text;
-        if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
-        const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
-        const s2 = ensurePeriod(`For example, ${ex}`);
-        return `Q${i+1}\n${s1}\n${s2}`;
-      }).filter(Boolean);
-      $('#answers').textContent = texts.join('\n\n');
-    }
-
-    function resetAll(){ initQuestions(); render(); updateAnswersBox(); }
-
-    // ====== TTS ======
-    const tts = {
-      supported: 'speechSynthesis' in window,
-      utterance: null,
-      get rate(){ return parseFloat($('#rate').value || '1'); },
-      speak(text){
-        if(!this.supported) return;
-        window.speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'en-US';
-        u.rate = this.rate;
-        const voices = window.speechSynthesis.getVoices();
-        const v = voices.find(v=>/en-|English/.test(v.lang||v.name));
-        if(v) u.voice = v;
-        this.utterance = u;
-        window.speechSynthesis.speak(u);
-      },
-      pause(){ this.supported && window.speechSynthesis.pause(); },
-      resume(){ this.supported && window.speechSynthesis.resume(); },
-      stop(){ this.supported && window.speechSynthesis.cancel(); }
-    };
-
-    function previewText(){
-      // Previewの英語だけを読み上げ
-      const lines = $('#preview').innerText.replace(/^Preview:\s*/,'').trim();
-      return lines;
-    }
-
-    // ====== Init ======
-    initQuestions();
-    render();
-
-    // actions
-    $('#btn-next').addEventListener('click', next);
-    $('#btn-randTopic').addEventListener('click', randomizeTopic);
-    $('#btn-reset').addEventListener('click', resetAll);
-    $('#btn-print').addEventListener('click', ()=> window.print());
-    $('#btn-copy').addEventListener('click', ()=>{ const txt = $('#answers').textContent.trim(); if(!txt) return; navigator.clipboard.writeText(txt); });
-
-    // TTS controls
-    if(tts.supported){
-      $('#btn-speak').addEventListener('click', ()=> tts.speak(previewText()));
-      $('#btn-pause').addEventListener('click', ()=> tts.pause());
-      $('#btn-resume').addEventListener('click', ()=> tts.resume());
-      $('#btn-stop').addEventListener('click', ()=> tts.stop());
-      window.speechSynthesis.onvoiceschanged = () => {}; // 一部ブラウザで必要
-      $('#ttsNote').textContent = '';
     } else {
-      $('#ttsNote').textContent = '（お使いのブラウザは音声読み上げに対応していません）';
-      ['btn-speak','btn-pause','btn-resume','btn-stop','rate'].forEach(id=>{ const n=$('#'+id); if(n) n.disabled=true; });
+      picks = sampleDistinct(['A','B','C','D','E'], CONFIG.questionCount);
     }
-  </script>
+    state.questions = picks.map(k=>({ topic:k, pickedReason:null, pickedExample:null, reasonCorrect:false, exampleCorrect:false, _scored:false }));
+    state.step = 0; state.score = 0; state.answers = [];
+  }
+
+  // ====== Render ======
+  function render(){
+    const q = state.questions[state.step];
+    $('#qnum').textContent = (state.step+1);
+    $('#qtotal').textContent = state.questions.length;
+    $('#score').textContent = state.score;
+    $('#topicText').textContent = topics.find(t=>t.key===q.topic).text;
+    updateBar();
+
+    renderReasonUI(q);
+    renderExampleUI(q);
+    updatePreview();
+
+    $('#result').className = 'muted';
+    $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
+    $('#btn-next').disabled = !(q.reasonCorrect && q.exampleCorrect);
+  }
+
+  function renderReasonUI(q){
+    const wrap = $('#reasonArea'); wrap.innerHTML='';
+    reasons.forEach(r=>{
+      const chip = el('button','chip'); chip.type='button'; chip.textContent = `${r.key}. ${r.text}`;
+      if(q.reasonCorrect){ chip.disabled = true; }
+      chip.addEventListener('click', ()=> onPickReason(r.key, chip));
+      wrap.appendChild(chip);
+    });
+    $('#reasonMsg').className = 'muted';
+    $('#reasonMsg').textContent = 'タップして選択';
+  }
+
+  function renderExampleUI(q){
+    const block = $('#exampleBlock'), wrap = $('#exampleArea'); wrap.innerHTML='';
+    if(!q.reasonCorrect){ block.style.display='none'; return; }
+    block.style.display='grid';
+    examples.forEach(ex=>{
+      const chip = el('button','chip'); chip.type='button'; chip.textContent = `${ex.key}. ${ex.text}`;
+      if(q.exampleCorrect) chip.disabled = true;
+      chip.addEventListener('click', ()=> onPickExample(ex.key, chip));
+      wrap.appendChild(chip);
+    });
+    $('#exampleMsg').className = 'muted';
+    $('#exampleMsg').textContent = 'タップして選択';
+  }
+
+  function updatePreview(){
+    const q = state.questions[state.step];
+    const t0 = topics.find(x=>x.key===q.topic).text;
+    const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
+    let ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
+    if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
+    const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
+    const s2 = ensurePeriod(`For example, ${ex}`);
+    $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
+  }
+
+  // ====== Interactions ======
+  function flashBad(node){
+    node.classList.add('bad','flash');
+    setTimeout(()=>node.classList.remove('flash'), 600);
+  }
+
+  function onPickReason(key, chip){
+    const q = state.questions[state.step];
+    const ok = (correctReasonsByTopic[q.topic]||[]).includes(key);
+    q.pickedReason = key;
+    if(ok){
+      q.reasonCorrect = true;
+      // disable others,緑は選択チップのみ
+      $('#reasonArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
+      chip.classList.add('ok','selected');
+      $('#reasonMsg').className = 'result ok';
+      $('#reasonMsg').textContent = '✅ 正解！つづいて「たとえば」を選ぼう';
+      renderExampleUI(q);
+      // 自動スクロール
+      setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 50);
+    } else {
+      flashBad(chip);
+      $('#reasonMsg').className = 'result bad';
+      $('#reasonMsg').textContent = '❌ このトピックには合わないよ。もう一度！';
+    }
+    updatePreview();
+  }
+
+  function onPickExample(key, chip){
+    const q = state.questions[state.step];
+    const must = exampleByReason[q.pickedReason];
+    q.pickedExample = key;
+    const ok = (key === must);
+    if(ok){
+      q.exampleCorrect = true;
+      $('#exampleArea').querySelectorAll('.chip').forEach(b=>{ b.disabled = true; });
+      chip.classList.add('ok','selected');
+      $('#exampleMsg').className = 'result ok';
+      $('#exampleMsg').textContent = '✅ 正解！Previewをきいて確認しよう';
+      if(!(q._scored)) { q._scored = true; state.score += 1; }
+      $('#btn-next').disabled = false;
+      updateAnswersBox();
+      $('#result').className='result ok';
+      $('#result').textContent='🎉 よくできました！「次へ」で続けよう';
+    } else {
+      flashBad(chip);
+      $('#exampleMsg').className = 'result bad';
+      $('#exampleMsg').textContent = '❌ その「たとえば」は選んだ理由に合わないよ。';
+    }
+    updatePreview();
+  }
+
+  function next(){
+    if(state.step < state.questions.length-1){ state.step++; render(); }
+    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; updateBar(true); }
+  }
+
+  function randomizeTopic(){
+    const q = state.questions[state.step];
+    const pool = ['A','B','C','D','E'].filter(k=>k!==q.topic);
+    q.topic = pool[Math.floor(Math.random()*pool.length)];
+    q.pickedReason=null; q.pickedExample=null; q.reasonCorrect=false; q.exampleCorrect=false; q._scored=false;
+    render();
+  }
+
+  function updateAnswersBox(){
+    const texts = state.questions.map((q,i)=>{
+      if(!(q.reasonCorrect && q.exampleCorrect)) return null;
+      const t = topics.find(x=>x.key===q.topic).text;
+      const r = reasons.find(x=>x.key===q.pickedReason).text;
+      let ex = examples.find(x=>x.key===q.pickedExample).text;
+      if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
+      const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
+      const s2 = ensurePeriod(`For example, ${ex}`);
+      return `Q${i+1}\n${s1}\n${s2}`;
+    }).filter(Boolean);
+    $('#answers').textContent = texts.join('\n\n');
+  }
+
+  function updateBar(done=false){
+    const pct = done ? 100 : (state.step / state.questions.length) * 100;
+    $('#bar').style.width = pct + '%';
+  }
+
+  function resetAll(){ initQuestions(); render(); updateAnswersBox(); updateBar(); }
+
+  // ====== TTS（トグル） ======
+  const tts = {
+    supported: 'speechSynthesis' in window,
+    utter: null,
+    get rate(){ return parseFloat($('#rate').value || '1'); },
+    speak(text){
+      if(!this.supported) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = this.rate;
+      const voices = window.speechSynthesis.getVoices();
+      const v = voices.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v;
+      this.utter = u; window.speechSynthesis.speak(u);
+    },
+    stop(){ this.supported && window.speechSynthesis.cancel(); }
+  };
+  function previewText(){ return $('#preview').innerText.replace(/^Preview:\s*/,'').trim(); }
+
+  // ====== Init ======
+  initQuestions(); render();
+
+  // actions
+  $('#btn-next').addEventListener('click', next);
+  $('#btn-randTopic').addEventListener('click', randomizeTopic);
+  $('#btn-reset').addEventListener('click', resetAll);
+  $('#btn-print').addEventListener('click', ()=> window.print());
+  $('#btn-copy').addEventListener('click', ()=>{ const t=$('#answers').textContent.trim(); if(!t) return; navigator.clipboard.writeText(t); });
+
+  // TTS toggle
+  const ttsBtn = $('#btn-tts');
+  if(tts.supported){
+    ttsBtn.addEventListener('click', ()=>{
+      const speaking = window.speechSynthesis.speaking;
+      if(!speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
+      else { tts.stop(); ttsBtn.textContent='🔊 読む'; }
+    });
+    $('#rate').addEventListener('input', ()=>{
+      if(window.speechSynthesis.speaking){ tts.speak(previewText()); ttsBtn.textContent='⏹ 停止'; }
+    });
+  } else {
+    $('#ttsNote').textContent='（ブラウザがTTSに非対応）';
+    ttsBtn.disabled = true; $('#rate').disabled = true;
+  }
+</script>
 </body>
 </html>
