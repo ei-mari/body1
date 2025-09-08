@@ -103,7 +103,9 @@
     <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
       <div id="reasonGroup" class="reason-group">
         <div id="reasonSummary" class="summary-line">
-          <span class="tag">✓ 理由</span><span id="reasonPickedText"></span>
+          <span class="tag">✓ 理由</span>
+          <span id="reasonPickedText"></span>
+          <button id="btn-edit-reason" class="slim secondary" type="button">変更</button>
         </div>
         <div class="subhead">STEP 2｜この理由に合う <span style="text-decoration:underline">たとえば</span> を選ぼう</div>
         <div id="exampleArea" class="choice-wrap"></div>
@@ -259,7 +261,7 @@
   const el = (t,c) => { const e=document.createElement(t); if(c) e.className=c; return e; };
   const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
   const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
-  const esc = s => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  const esc = s => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); 
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
   /* ====== State ====== */
@@ -328,7 +330,7 @@
 
   function renderExampleUI(q, bank){
     const block = $('#exampleBlock'), wrap = $('#exampleArea'); wrap.innerHTML='';
-    if(!q.confirmedStep1){ block.style.display='none'; return; }
+    if(!q.confirmedStep1){ block.style.display='none'; return; }   // ← ここがポイント
     block.style.display='grid';
     bank.examples.forEach(ex=>{
       const chip = el('button','chip'); chip.type='button';
@@ -371,7 +373,7 @@
     $('#pill-step2').className = 'pill ' + (q.confirmedStep1 ? (q.exampleCorrect ? 'done' : 'active') : '');
   }
 
-  /* 可視制御 */
+  /* 可視制御 + 「変更」ボタン */
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
@@ -386,6 +388,11 @@
       $('#reasonBlock').style.display = 'grid';
       $('#exampleBlock').style.display = 'none';
       $('#reasonGroup').style.display = 'none';
+    }
+    const editBtn = document.getElementById('btn-edit-reason');
+    if(editBtn){
+      editBtn.style.display = q.confirmedStep1 ? 'inline-flex' : 'none';
+      editBtn.onclick = backToStep1;
     }
   }
 
@@ -421,12 +428,12 @@
   function confirmStep1(){
     const q = state.questions[state.step];
     if(!q.pickedReason) return;
-    q.confirmedStep1 = true;            // 全部自然な理由なので正誤判定はしない
+    q.confirmedStep1 = true; // 正誤判定なしで確定
     $('#reasonMsg').className='result ok';
     $('#reasonMsg').textContent='✅ いいね！STEP 2 へ進もう';
-    updateStepVisibility();
-    updatePreview(); updatePills(); updateOkButtons();
+    updateStepVisibility(); renderExampleUI(q, BANK[q.topic]);
     document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'});
+    updatePreview(); updatePills(); updateOkButtons();
   }
 
   function confirmStep2(){
@@ -454,6 +461,16 @@
   function nextQuestion(){
     if(state.step < state.questions.length-1){ state.step++; render(); }
     else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; }
+  }
+
+  function backToStep1(){
+    const q = state.questions[state.step];
+    q.confirmedStep1 = false;
+    q.pickedExample = null;
+    q.exampleCorrect = false;
+    $('#exampleMsg').textContent = '';
+    render();
+    document.getElementById('reasonBlock').scrollIntoView({behavior:'smooth', block:'start'});
   }
 
   function updateOkButtons(){
