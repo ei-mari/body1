@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ + TTS）</title>
+<title> Body 1 ビルダークイズ</title>
 <style>
   :root{ --bg:#f7f7fb; --card:#fff; --ink:#0f172a; --muted:#6b7280; --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626; --radius:16px; }
   *{box-sizing:border-box} html,body{height:100%}
@@ -14,7 +14,6 @@
   .toolbar{display:flex;gap:8px}
   button{border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.08)}
   button.secondary{background:#e5e7eb;color:#111827}
-  button.ghost{background:transparent;color:var(--accent);padding:8px 10px}
   button.primary{background:var(--accent);color:#fff}
   button.slim{padding:6px 10px;border-radius:10px;font-size:12px}
   button:focus{outline:2px solid var(--ring);outline-offset:2px}
@@ -34,19 +33,10 @@
   .chip.bad.flash{background:#fee2e2;border-color:#fecaca}
   .chip.selected{ outline:2px solid var(--accent); background:#eff6ff; border-color:#bfdbfe }
 
-  .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
-  .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
-  .btn-icon{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;background:#e5e7eb;color:#111827}
   .progress{height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden}
   .bar{height:100%;width:0%;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .25s ease}
-  .footer{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;margin-top:10px}
   .result{font-weight:700}.result.ok{color:var(--ok)}.result.bad{color:var(--bad)}
   .copy-area{white-space:pre-wrap;background:#0b1020;color:#e2e8f0;padding:12px;border-radius:12px;font-size:14px}
-  details{margin-top:4px} summary{cursor:pointer;color:var(--muted)}
-  .reason-group{display:none;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
-  .summary-line{display:flex;align-items:center;gap:10px}
-  .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
-  .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
 
   /* 見出し（罫線＋電球） */
   .topic-head{display:grid;gap:6px;margin-top:6px}
@@ -54,7 +44,17 @@
   .topic-subline{display:flex;align-items:center;gap:8px;color:#334155;font-weight:700}
   .topic-subline::before,.topic-subline::after{content:"";flex:1;height:1.5px;background:#e5e7eb;border-radius:999px}
 
-  .okwrap{display:none;align-items:center;gap:10px;margin-top:10px}
+  /* Preview（上に配置） */
+  .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
+  .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+  .btn-icon{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;background:#e5e7eb;color:#111827}
+  .okwrap{display:none;align-items:center;gap:10px;margin-top:8px}
+
+  /* STEP1の理由を表示しながらSTEP2 */
+  .reason-group{display:none;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px}
+  .summary-line{display:flex;align-items:center;gap:10px}
+  .summary-line .tag{background:#dcfce7;color:#065f46;padding:2px 8px;border-radius:999px;font-weight:700;font-size:12px}
+  .subhead{font-weight:700;color:#334155;font-size:14px;margin-top:2px}
 
   /* まとめのチェックリスト */
   .ans-item{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;justify-content:space-between}
@@ -63,8 +63,7 @@
   .ans-title{font-weight:700}
   .ans-note{color:var(--muted);font-size:12px}
 
-  @media (min-width:760px){ .chip{padding:12px 14px} }
-  @media print{ header,.toolbar,.footer,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
+  @media print{ header,.toolbar,details{display:none!important} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
 </style>
 </head>
 <body>
@@ -72,8 +71,8 @@
   <header>
     <h1>🟨 Part 2｜Body 1 ビルダー（クイズ）</h1>
     <div class="toolbar">
-      <button id="btn-reset" class="ghost">↺ リセット</button>
-      <button id="btn-print" class="ghost">🖨️ 印刷</button>
+      <button id="btn-reset" class="secondary">↺ リセット</button>
+      <button id="btn-print" class="secondary">🖨️ 印刷</button>
     </div>
   </header>
 
@@ -87,17 +86,37 @@
 
     <div class="hr"></div>
 
-    <!-- ステップ表示 -->
     <div class="steps">
       <span class="pill" id="pill-step1">STEP 1: 理由</span>
       <span class="pill" id="pill-step2">STEP 2: たとえば</span>
     </div>
 
-    <!-- 見出し -->
     <div class="topic-head">
       <div class="topic-title" id="topicText"></div>
-      <div class="topic-subline">
-        <span>💡 正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span>
+      <div class="topic-subline"><span>💡 正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span></div>
+    </div>
+
+    <!-- PREVIEW（上） -->
+    <div class="row" style="margin-top:10px">
+      <div class="preview">
+        <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
+        <div class="preview-actions">
+          <button id="btn-tts" class="btn-icon" aria-label="読み上げ">🎧</button>
+          <details><summary>▶︎ オプション</summary>
+            <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
+          </details>
+          <small id="ttsNote" class="muted"></small>
+        </div>
+      </div>
+      <!-- OK（STEP1確認） -->
+      <div class="okwrap" id="okWrap1">
+        <span class="muted">これでいい？</span>
+        <button id="btn-ok1" class="primary" disabled>OK（STEP 2へ）</button>
+      </div>
+      <!-- OK（STEP2確認 次へ） -->
+      <div class="okwrap" id="okWrap2">
+        <span class="muted">完成！</span>
+        <button id="btn-ok2" class="primary" disabled>OK（次へ）</button>
       </div>
     </div>
 
@@ -119,28 +138,7 @@
       <div id="exampleMsg" class="muted"></div>
     </div>
 
-    <!-- Preview（TTSは文の直下・アイコンのみ） -->
-    <div class="row" style="margin-top:10px">
-      <div class="preview">
-        <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
-        <div class="preview-actions">
-          <button id="btn-tts" class="btn-icon" aria-label="読み上げ">🎧</button>
-          <details><summary>▶︎ オプション</summary>
-            <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
-          </details>
-          <small id="ttsNote" class="muted"></small>
-        </div>
-      </div>
-
-      <div class="okwrap" id="okWrap">
-        <span class="muted">これでいい？</span>
-        <button id="btn-ok" class="primary" disabled>OK</button>
-      </div>
-    </div>
-
-    <div class="footer">
-      <div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div>
-    </div>
+    <div class="row"><div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div></div>
   </div>
 
   <div class="hr"></div>
@@ -158,7 +156,7 @@
 </div>
 
 <script>
-  // ====== Config ======
+  /* ====== Config ====== */
   const CONFIG = { questionCount: 3, topicMode: 'auto', presetTopics: ['A','C','E'] };
   (function(){
     const sp = new URLSearchParams(location.search);
@@ -166,111 +164,104 @@
     if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
   })();
 
-  // ====== Data（トピックごとに専用の5択） ======
-  // 各理由は exId で、その理由に対応する「たとえば」を指定
+  /* ====== Data（トピック別 5択） ====== */
   const BANK = {
-    A: { // Uniforms
-      topic: 'Students should wear school uniforms.',
-      reasons: [
-        { id:'A-r1', text:'it saves time in the morning.', tag:'⏱ 朝の時間', correct:true,  exId:'A-ex-iii' },
-        { id:'A-r2', text:'it helps us focus.',          tag:'🎧 集中',   correct:true,  exId:'A-ex-i'   },
-        { id:'A-r3', text:'it keeps us healthy.',        tag:'💪 健康',   correct:false },
-        { id:'A-r4', text:'it gives us more energy.',    tag:'⚡ 元気',   correct:false },
-        { id:'A-r5', text:'it speeds up research.',      tag:'🔎 調べる速さ', correct:false },
+    A:{topic:'Students should wear school uniforms.',
+      reasons:[
+        {id:'A-r1',text:'it saves time in the morning.',tag:'⏱ 朝の時間',correct:true,exId:'A-ex-iii'},
+        {id:'A-r2',text:'it helps us focus.',tag:'🎧 集中',correct:true,exId:'A-ex-i'},
+        {id:'A-r3',text:'it keeps us healthy.',tag:'💪 健康',correct:false},
+        {id:'A-r4',text:'it gives us more energy.',tag:'⚡ 元気',correct:false},
+        {id:'A-r5',text:'it speeds up research.',tag:'🔎 調べる速さ',correct:false},
       ],
-      examples: [
-        { id:'A-ex-i',   text:'I can concentrate in class.' },
-        { id:'A-ex-ii',  text:"I don't feel sleepy in the morning." },
-        { id:'A-ex-iii', text:"We don't waste time choosing clothes." },
-        { id:'A-ex-iv',  text:"I don't catch colds often." },
-        { id:'A-ex-v',   text:'We can look up information in seconds.' },
+      examples:[
+        {id:'A-ex-i',text:'I can concentrate in class.'},
+        {id:'A-ex-ii',text:"I don't feel sleepy in the morning."},
+        {id:'A-ex-iii',text:"We don't waste time choosing clothes."},
+        {id:'A-ex-iv',text:"I don't catch colds often."},
+        {id:'A-ex-v',text:'We can look up information in seconds.'},
       ],
-      why: '制服だと服えらびがいらず、見た目の差も小さくて気が散りにくい。'
+      why:'制服だと服えらびがいらず、見た目の差も小さくて気が散りにくい。'
     },
-    B: { // Vegetables
-      topic: 'Eating vegetables is important.',
-      reasons: [
-        { id:'B-r1', text:'it keeps us healthy.',        tag:'💪 健康',   correct:true,  exId:'B-ex-iv' },
-        { id:'B-r2', text:'it gives us more energy.',    tag:'⚡ 元気',   correct:true,  exId:'B-ex-ii' },
-        { id:'B-r3', text:'it helps us focus.',          tag:'🎧 集中',   correct:false },
-        { id:'B-r4', text:'it saves time in the morning.', tag:'⏱ 朝の時間', correct:false },
-        { id:'B-r5', text:'it speeds up research.',      tag:'🔎 調べる速さ', correct:false },
+    B:{topic:'Eating vegetables is important.',
+      reasons:[
+        {id:'B-r1',text:'it keeps us healthy.',tag:'💪 健康',correct:true,exId:'B-ex-iv'},
+        {id:'B-r2',text:'it gives us more energy.',tag:'⚡ 元気',correct:true,exId:'B-ex-ii'},
+        {id:'B-r3',text:'it helps us focus.',tag:'🎧 集中',correct:false},
+        {id:'B-r4',text:'it saves time in the morning.',tag:'⏱ 朝の時間',correct:false},
+        {id:'B-r5',text:'it speeds up research.',tag:'🔎 調べる速さ',correct:false},
       ],
-      examples: [
-        { id:'B-ex-i',   text:'I can stay focused in class.' },
-        { id:'B-ex-ii',  text:'I feel more awake in the morning.' },
-        { id:'B-ex-iii', text:'We can get ready more quickly.' },
-        { id:'B-ex-iv',  text:"I rarely catch colds." },
-        { id:'B-ex-v',   text:'We can look up information in seconds.' },
+      examples:[
+        {id:'B-ex-i',text:'I can stay focused in class.'},
+        {id:'B-ex-ii',text:'I feel more awake in the morning.'},
+        {id:'B-ex-iii',text:'We can get ready more quickly.'},
+        {id:'B-ex-iv',text:'I rarely catch colds.'},
+        {id:'B-ex-v',text:'We can look up information in seconds.'},
       ],
-      why: '野菜は体の調子をととのえ、病気をへらす助けになる。'
+      why:'野菜は体の調子をととのえ、病気をへらす助けになる。'
     },
-    C: { // Bed early
-      topic: 'Going to bed early is a good habit.',
-      reasons: [
-        { id:'C-r1', text:'it gives us more energy.',    tag:'⚡ 元気',   correct:true,  exId:'C-ex-ii' },
-        { id:'C-r2', text:'it helps us focus.',          tag:'🎧 集中',   correct:true,  exId:'C-ex-i'  },
-        { id:'C-r3', text:'it saves time in the morning.', tag:'⏱ 朝の時間', correct:false },
-        { id:'C-r4', text:'it keeps us healthy.',        tag:'💪 健康',   correct:false },
-        { id:'C-r5', text:'it speeds up research.',      tag:'🔎 調べる速さ', correct:false },
+    C:{topic:'Going to bed early is a good habit.',
+      reasons:[
+        {id:'C-r1',text:'it gives us more energy.',tag:'⚡ 元気',correct:true,exId:'C-ex-ii'},
+        {id:'C-r2',text:'it helps us focus.',tag:'🎧 集中',correct:true,exId:'C-ex-i'},
+        {id:'C-r3',text:'it saves time in the morning.',tag:'⏱ 朝の時間',correct:false},
+        {id:'C-r4',text:'it keeps us healthy.',tag:'💪 健康',correct:false},
+        {id:'C-r5',text:'it speeds up research.',tag:'🔎 調べる速さ',correct:false},
       ],
-      examples: [
-        { id:'C-ex-i',   text:'I can stay focused in class.' },
-        { id:'C-ex-ii',  text:'I feel more awake in the morning.' },
-        { id:'C-ex-iii', text:'We can get ready more quickly.' },
-        { id:'C-ex-iv',  text:"I don't get sick often." },
-        { id:'C-ex-v',   text:'We can look up information in seconds.' },
+      examples:[
+        {id:'C-ex-i',text:'I can stay focused in class.'},
+        {id:'C-ex-ii',text:'I feel more awake in the morning.'},
+        {id:'C-ex-iii',text:'We can get ready more quickly.'},
+        {id:'C-ex-iv',text:"I don't get sick often."},
+        {id:'C-ex-v',text:'We can look up information in seconds.'},
       ],
-      why: '早く寝ると次の朝に元気で、授業でも集中しやすい。'
+      why:'早く寝ると次の朝に元気で、授業でも集中しやすい。'
     },
-    D: { // Tablets
-      topic: 'Using tablets in class is helpful.',
-      reasons: [
-        { id:'D-r1', text:'it speeds up research.',      tag:'🔎 調べる速さ', correct:true,  exId:'D-ex-v' },
-        { id:'D-r2', text:'it helps us focus.',          tag:'🎧 集中',     correct:true,  exId:'D-ex-i' },
-        { id:'D-r3', text:'it saves time in the morning.', tag:'⏱ 朝の時間', correct:false },
-        { id:'D-r4', text:'it keeps us healthy.',        tag:'💪 健康',     correct:false },
-        { id:'D-r5', text:'it gives us more energy.',    tag:'⚡ 元気',     correct:false },
+    D:{topic:'Using tablets in class is helpful.',
+      reasons:[
+        {id:'D-r1',text:'it speeds up research.',tag:'🔎 調べる速さ',correct:true,exId:'D-ex-v'},
+        {id:'D-r2',text:'it helps us focus.',tag:'🎧 集中',correct:true,exId:'D-ex-i'},
+        {id:'D-r3',text:'it saves time in the morning.',tag:'⏱ 朝の時間',correct:false},
+        {id:'D-r4',text:'it keeps us healthy.',tag:'💪 健康',correct:false},
+        {id:'D-r5',text:'it gives us more energy.',tag:'⚡ 元気',correct:false},
       ],
-      examples: [
-        { id:'D-ex-i',   text:'I can concentrate in class.' },
-        { id:'D-ex-ii',  text:'I feel awake in the morning.' },
-        { id:'D-ex-iii', text:'We can get ready more quickly.' },
-        { id:'D-ex-iv',  text:"I don't catch colds often." },
-        { id:'D-ex-v',   text:'We can look up information in seconds.' },
+      examples:[
+        {id:'D-ex-i',text:'I can concentrate in class.'},
+        {id:'D-ex-ii',text:'I feel awake in the morning.'},
+        {id:'D-ex-iii',text:'We can get ready more quickly.'},
+        {id:'D-ex-iv',text:"I don't catch colds often."},
+        {id:'D-ex-v',text:'We can look up information in seconds.'},
       ],
-      why: 'タブレットなら情報をすぐ調べられて、学習が進む。'
+      why:'タブレットなら情報をすぐ調べられて、学習が進む。'
     },
-    E: { // Breakfast
-      topic: 'Eating breakfast is important.',
-      reasons: [
-        { id:'E-r1', text:'it gives us more energy.',    tag:'⚡ 元気',   correct:true,  exId:'E-ex-ii' },
-        { id:'E-r2', text:'it keeps us healthy.',        tag:'💪 健康',   correct:true,  exId:'E-ex-iv' },
-        { id:'E-r3', text:'it helps us focus.',          tag:'🎧 集中',   correct:false },
-        { id:'E-r4', text:'it saves time in the morning.', tag:'⏱ 朝の時間', correct:false },
-        { id:'E-r5', text:'it speeds up research.',      tag:'🔎 調べる速さ', correct:false },
+    E:{topic:'Eating breakfast is important.',
+      reasons:[
+        {id:'E-r1',text:'it gives us more energy.',tag:'⚡ 元気',correct:true,exId:'E-ex-ii'},
+        {id:'E-r2',text:'it keeps us healthy.',tag:'💪 健康',correct:true,exId:'E-ex-iv'},
+        {id:'E-r3',text:'it helps us focus.',tag:'🎧 集中',correct:false},
+        {id:'E-r4',text:'it saves time in the morning.',tag:'⏱ 朝の時間',correct:false},
+        {id:'E-r5',text:'it speeds up research.',tag:'🔎 調べる速さ',correct:false},
       ],
-      examples: [
-        { id:'E-ex-i',   text:'I can stay focused in class.' },
-        { id:'E-ex-ii',  text:'I feel more awake in the morning.' },
-        { id:'E-ex-iii', text:'We can get ready more quickly.' },
-        { id:'E-ex-iv',  text:"I rarely catch colds." },
-        { id:'E-ex-v',   text:'We can look up information in seconds.' },
+      examples:[
+        {id:'E-ex-i',text:'I can stay focused in class.'},
+        {id:'E-ex-ii',text:'I feel more awake in the morning.'},
+        {id:'E-ex-iii',text:'We can get ready more quickly.'},
+        {id:'E-ex-iv',text:'I rarely catch colds.'},
+        {id:'E-ex-v',text:'We can look up information in seconds.'},
       ],
-      why: '朝ごはんでエネルギーが手に入り、体も元気になる。'
+      why:'朝ごはんでエネルギーが手に入り、体も元気になる。'
     }
   };
-
   const topicKeys = Object.keys(BANK);
 
-  // ====== Helpers ======
+  /* ====== Helpers ====== */
   const $ = s => document.querySelector(s);
   const el = (t,c) => { const e=document.createElement(t); if(c) e.className=c; return e; };
   const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
   const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
-  // ====== State ======
+  /* ====== State ====== */
   const state = { step:0, questions:[], score:0, selectedForCopy:{} };
 
   function initQuestions(){
@@ -285,19 +276,17 @@
       picks = sampleDistinct(topicKeys, CONFIG.questionCount);
     }
     state.questions = picks.map(k=>({
-      topic:k,
-      pickedReason:null, pickedExample:null,
+      topic:k, pickedReason:null, pickedExample:null,
       reasonCorrect:false, exampleCorrect:false,
       confirmedStep1:false, _scored:false
     }));
     state.step = 0; state.score = 0; state.selectedForCopy = {};
   }
 
-  // ====== Render ======
+  /* ====== Render ====== */
   function render(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
-
     $('#qnum').textContent = (state.step+1);
     $('#qtotal').textContent = state.questions.length;
     $('#score').textContent = state.score;
@@ -309,11 +298,11 @@
     updatePreview();
     updatePills();
     updateStepVisibility();
-    updateOkVisibility();
+    updateOkButtons();
     renderAnswersList();
 
-    $('#result').className = 'muted';
-    $('#result').textContent = 'STEP 1 → STEP 2 の順に完成させよう';
+    $('#result').className='muted';
+    $('#result').textContent='STEP 1 → STEP 2 の順に完成させよう';
   }
 
   function renderReasonUI(q, bank){
@@ -328,14 +317,12 @@
         q.pickedReason = r.id;
         $('#reasonArea').querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
         chip.classList.add('selected');
-        $('#reasonMsg').className = 'muted';
-        $('#reasonMsg').textContent = '';
-        updatePreview(); updateOkVisibility();
+        $('#reasonMsg').textContent='';
+        updatePreview(); updateOkButtons();
       });
       wrap.appendChild(chip);
     });
-    $('#reasonMsg').className = 'muted';
-    $('#reasonMsg').textContent = '';
+    $('#reasonMsg').textContent='';
   }
 
   function renderExampleUI(q, bank){
@@ -349,11 +336,10 @@
       chip.addEventListener('click', ()=> onPickExample(ex.id, chip));
       wrap.appendChild(chip);
     });
-    $('#exampleMsg').className = 'muted';
-    $('#exampleMsg').textContent = '';
+    $('#exampleMsg').textContent='';
   }
 
-  // PREVIEW：STEP1=1文／STEP2で2文目
+  /* PREVIEW（STEP1=1文, STEP2=2文） */
   function updatePreview(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
@@ -368,14 +354,14 @@
     $('#previewText').innerHTML = html;
   }
 
-  // STEP pills
+  /* STEP pills */
   function updatePills(){
     const q = state.questions[state.step];
     $('#pill-step1').className = 'pill ' + (q.confirmedStep1 ? 'done' : 'active');
     $('#pill-step2').className = 'pill ' + (q.confirmedStep1 ? (q.exampleCorrect ? 'done' : 'active') : '');
   }
 
-  // 可視制御
+  /* 可視制御 */
   function updateStepVisibility(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
@@ -393,16 +379,16 @@
     }
   }
 
-  // まとめ：チェックリスト
+  /* まとめ：チェックリスト */
   function renderAnswersList(){
     const box = $('#answersList'); box.innerHTML = '';
-    state.questions.forEach((q, i)=>{
+    state.questions.forEach((q,i)=>{
       const bank = BANK[q.topic];
-      const wrapper = el('div', 'ans-item' + (q.exampleCorrect ? '' : ' disabled'));
+      const row = el('div','ans-item'+(q.exampleCorrect?'':' disabled'));
       const left = el('label','ans-left');
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.disabled = !q.exampleCorrect;
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.disabled=!q.exampleCorrect;
       cb.checked = !!state.selectedForCopy[i];
-      cb.addEventListener('change', ()=>{ state.selectedForCopy[i] = cb.checked; updateAnswersText(); });
+      cb.addEventListener('change', ()=>{ state.selectedForCopy[i]=cb.checked; updateAnswersText(); });
       const title = el('span','ans-title'); title.textContent = `Q${i+1}`;
       const note = el('span','ans-note'); note.textContent = bank.topic;
       left.appendChild(cb); left.appendChild(title); left.appendChild(note);
@@ -411,22 +397,21 @@
         state.step = i; render();
         document.getElementById('quiz').scrollIntoView({behavior:'smooth', block:'start'});
       });
-      wrapper.appendChild(left); wrapper.appendChild(showBtn);
-      box.appendChild(wrapper);
+      row.appendChild(left); row.appendChild(showBtn);
+      box.appendChild(row);
     });
     updateAnswersText();
   }
-
-  function buildAnswerText(q, i){
+  function buildAnswerText(q,i){
     const bank = BANK[q.topic];
-    const r = bank.reasons.find(x=>x.id===q.pickedReason)?.text || '';
-    const ex = bank.examples.find(x=>x.id===q.pickedExample)?.text || '';
+    const r = bank.reasons.find(x=>x.id===q.pickedReason)?.text||'';
+    const ex = bank.examples.find(x=>x.id===q.pickedExample)?.text||'';
     const s1 = ensurePeriod(`First, ${cleanEnd(bank.topic)} because ${cleanEnd(r)}`);
     const s2 = ensurePeriod(`For example, ${ex}`);
     return `Q${i+1}\n${s1}\n${s2}`;
   }
   function updateAnswersText(){
-    const parts = [];
+    const parts=[];
     state.questions.forEach((q,i)=>{
       if(state.selectedForCopy[i] && q.reasonCorrect && q.exampleCorrect){
         parts.push(buildAnswerText(q,i));
@@ -435,7 +420,7 @@
     $('#answers').textContent = parts.join('\n\n');
   }
 
-  // 説明文
+  /* フィードバック */
   function flashBad(node){ node.classList.add('bad','flash'); setTimeout(()=>node.classList.remove('flash'), 600); }
   function explainWrongReason(topicKey, chosenReasonId){
     const bank = BANK[topicKey];
@@ -450,7 +435,7 @@
     return `その例は「${belongTo?belongTo.tag:'別の理由'}」の話。今の理由は「${current.tag}」。つながっていないね。ヒント：例）${bank.examples.find(e=>e.id===current.exId)?.text}`;
   }
 
-  // Handlers
+  /* ハンドラ */
   function confirmStep1(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
@@ -458,20 +443,17 @@
     const r = bank.reasons.find(x=>x.id===q.pickedReason);
     const ok = !!r?.correct;
     if(ok){
-      q.reasonCorrect = true;
-      q.confirmedStep1 = true;
-      $('#reasonMsg').className = 'result ok';
-      $('#reasonMsg').textContent = '✅ 正解！STEP 2 へ進もう';
-      updateStepVisibility();
-      renderExampleUI(q, bank);
+      q.reasonCorrect = true; q.confirmedStep1 = true;
+      $('#reasonMsg').className='result ok';
+      $('#reasonMsg').textContent='✅ 正解！STEP 2 へ進もう';
+      updateStepVisibility(); renderExampleUI(q, bank);
       setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 30);
     }else{
-      q.reasonCorrect = false;
-      q.confirmedStep1 = false;
-      $('#reasonMsg').className = 'result bad';
-      $('#reasonMsg').textContent = explainWrongReason(q.topic, q.pickedReason);
+      q.reasonCorrect=false; q.confirmedStep1=false;
+      $('#reasonMsg').className='result bad';
+      $('#reasonMsg').textContent=explainWrongReason(q.topic, q.pickedReason);
     }
-    updatePreview(); updatePills(); updateOkVisibility();
+    updatePreview(); updatePills(); updateOkButtons();
   }
 
   function onPickExample(exId, chip){
@@ -484,67 +466,56 @@
       q.exampleCorrect = true;
       document.querySelectorAll('#exampleArea .chip').forEach(b=>{ b.disabled = true; });
       chip.classList.add('ok','selected');
-      $('#exampleMsg').className = 'result ok';
-      $('#exampleMsg').textContent = '✅ 正解！';
+      $('#exampleMsg').className='result ok';
+      $('#exampleMsg').textContent='✅ 正解！OKで次へ';
       if(!(q._scored)) { q._scored = true; state.score += 1; }
-      renderAnswersList();
-      // 自動で次の問題へ
-      if(state.step < state.questions.length-1){
-        setTimeout(()=>{ state.step++; render(); }, 1000);
-      }else{
-        $('#result').className='result ok';
-        $('#result').textContent='🎉 すべて終了！おつかれさま';
-      }
     } else {
       flashBad(chip);
-      $('#exampleMsg').className = 'result bad';
-      $('#exampleMsg').textContent = explainWrongExample(q.topic, q.pickedReason, exId);
+      $('#exampleMsg').className='result bad';
+      $('#exampleMsg').textContent=explainWrongExample(q.topic, q.pickedReason, exId);
     }
-    updatePreview(); updatePills();
+    updatePreview(); updatePills(); updateOkButtons();
   }
 
-  function updateOkVisibility(){
-    const q = state.questions[state.step];
-    const okw = $('#okWrap'), okbtn = $('#btn-ok');
-    if(q.pickedReason && !q.confirmedStep1){ okw.style.display = 'flex'; okbtn.disabled = false; }
-    else { okw.style.display = 'none'; okbtn.disabled = true; }
+  function nextQuestion(){
+    if(state.step < state.questions.length-1){ state.step++; render(); }
+    else { $('#result').className='result ok'; $('#result').textContent='🎉 すべて終了！おつかれさま'; }
   }
-  $('#btn-ok').addEventListener('click', confirmStep1);
+
+  function updateOkButtons(){
+    const q = state.questions[state.step];
+    // STEP1 OK
+    const w1 = $('#okWrap1'), b1 = $('#btn-ok1');
+    if(q.pickedReason && !q.confirmedStep1){ w1.style.display='flex'; b1.disabled=false; } else { w1.style.display='none'; b1.disabled=true; }
+    // STEP2 OK
+    const w2 = $('#okWrap2'), b2 = $('#btn-ok2');
+    if(q.confirmedStep1 && q.exampleCorrect){ w2.style.display='flex'; b2.disabled=false; } else { w2.style.display='none'; b2.disabled=true; }
+  }
+
+  /* 初期化・バインド */
+  initQuestions(); render();
+  $('#btn-ok1').addEventListener('click', confirmStep1);
+  $('#btn-ok2').addEventListener('click', nextQuestion);
 
   function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
   function resetAll(){ initQuestions(); render(); updateBar(); }
+  $('#btn-reset').addEventListener('click', resetAll);
+  $('#btn-print').addEventListener('click', ()=> window.print());
+  $('#btn-copy').addEventListener('click', ()=>{ const t=$('#answers').textContent.trim(); if(!t) return; navigator.clipboard.writeText(t); });
 
-  // ====== TTS ======
+  /* TTS */
   const tts = {
-    supported: 'speechSynthesis' in window, utter: null,
-    get rate(){ return parseFloat($('#rate').value || '1'); },
+    supported:'speechSynthesis' in window, utter:null,
+    get rate(){ return parseFloat($('#rate').value||'1'); },
     speak(text){ if(!this.supported) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='en-US'; u.rate=this.rate; const vs=speechSynthesis.getVoices(); const v=vs.find(v=>/en-|English/.test(v.lang||v.name)); if(v) u.voice=v; this.utter=u; speechSynthesis.speak(u); },
     stop(){ this.supported && speechSynthesis.cancel(); }
   };
   function previewPlainText(){ return $('#previewText').innerText.replace(/^Preview:\s*/,'').trim(); }
-
-  // ====== Init & binds ======
-  initQuestions(); render();
-  $('#btn-reset').addEventListener('click', resetAll);
-  $('#btn-print').addEventListener('click', ()=> window.print());
-  $('#btn-copy').addEventListener('click', ()=>{
-    const t=$('#answers').textContent.trim(); if(!t) return;
-    navigator.clipboard.writeText(t);
-  });
-
   const ttsBtn = $('#btn-tts');
   if(tts.supported){
-    ttsBtn.addEventListener('click', ()=>{
-      if(!speechSynthesis.speaking){ tts.speak(previewPlainText()); }
-      else { tts.stop(); }
-    });
-    $('#rate').addEventListener('input', ()=>{
-      if(speechSynthesis.speaking){ tts.speak(previewPlainText()); }
-    });
-  } else {
-    $('#ttsNote').textContent='（ブラウザがTTSに非対応）';
-    ttsBtn.disabled = true; $('#rate').disabled = true;
-  }
+    ttsBtn.addEventListener('click', ()=>{ if(!speechSynthesis.speaking){ tts.speak(previewPlainText()); } else { tts.stop(); } });
+    $('#rate').addEventListener('input', ()=>{ if(speechSynthesis.speaking){ tts.speak(previewPlainText()); } });
+  } else { $('#ttsNote').textContent='（ブラウザがTTSに非対応）'; ttsBtn.disabled = true; $('#rate').disabled = true; }
 </script>
 </body>
 </html>
