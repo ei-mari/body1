@@ -162,7 +162,7 @@
     if(m){ CONFIG.topicMode = 'preset'; CONFIG.presetTopics = m.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean); }
   })();
 
-  /* ====== Data（指定の25文に一致） ====== */
+  /* ====== Data（25文） ====== */
   const BANK = {
     A:{topic:'Students should wear school uniforms.',
       reasons:[
@@ -490,16 +490,19 @@
       document.querySelectorAll('#exampleArea .chip').forEach(b=>b.disabled=true);
       updateCopyBox(); renderJumpList();
     }else{
-      // —— デザート味：観点ヒント → 2回目以降は問いかけも追加
+      // —— デザート味：観点ヒント + 2回目以降は問いかけ。ラベル（絵文字つき）も明示
       q._exTries = (q._exTries || 0) + 1;
       const current  = bank.reasons.find(r=>r.id===q.pickedReason);
+      const belongTo = bank.reasons.find(r=>r.exId===q.pickedExample); // 選んだ例が属する理由
+      const currentLabel = current?.tag || '別の理由';
+      const chosenLabel  = belongTo?.tag || '別の理由';
       const hint1 = HINT_BY_TAG[current?.tag] || '観点：この理由をはっきり示す例にしよう。';
       const qHint = HINT_Q_BY_TAG[current?.tag] || '';
       $('#exampleMsg').className='result bad';
       $('#exampleMsg').textContent =
         q._exTries === 1
-          ? `ちがうよ。今の理由は『${current?.tag}』だよ。${hint1}`
-          : `もう一歩！今の理由は『${current?.tag}』。${hint1} ${qHint}`;
+          ? `惜しい！今えらんだ内容は『${chosenLabel}』だよ。『${currentLabel}』に関連した内容を選ぼう。${hint1}`
+          : `惜しい！今えらんだ内容は『${chosenLabel}』。ねらいは『${currentLabel}』だよ。${hint1} ${qHint}`;
     }
     updatePreview(); updatePills(); updateOkButtons();
   }
