@@ -14,7 +14,7 @@
   .toolbar{display:flex;gap:8px}
   button{border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.08)}
   button.secondary{background:#e5e7eb;color:#111827}
-  button.primary{background:var(--accent);color:#fff}
+  button.primary{background:#2563eb;color:#fff}
   button.slim{padding:6px 10px;border-radius:10px;font-size:12px}
   button:focus{outline:2px solid var(--ring);outline-offset:2px}
   .badge{display:inline-flex;align-items:center;gap:6px;background:#e0e7ff;color:#3730a3;font-weight:700;padding:4px 10px;border-radius:999px;font-size:12px}
@@ -256,12 +256,34 @@
   };
   const topicKeys = Object.keys(BANK);
 
+  /* —— ネタバレしない指針ヒント —— */
+  const HINT_BY_TAG = {
+    '⏱ 朝の時間':'朝の支度や時間が短くなることを示す例を選ぼう。',
+    '🎧 集中':'授業中に集中できることが伝わる例を選ぼう。',
+    '🤝 一体感':'みんなが同じでまとまる感じが出る例を選ぼう。',
+    '🛡 安全':'安全や見分けやすさに関する例を選ぼう。',
+    '⚖ 公平':'流行やブランドのプレッシャーが減る内容を選ぼう。',
+    '💪 健康':'体調がよい／病気になりにくい内容を選ぼう。',
+    '⚡ エネルギー':'朝に元気・体力が出る内容を選ぼう。',
+    '🌀 消化':'お腹や消化の調子がよくなる内容を選ぼう。',
+    '📈 成長':'体の成長や回復に役立つ内容を選ぼう。',
+    '🛡 免疫':'風邪をひきにくい等の病気予防の内容を選ぼう。',
+    '😊 機嫌':'気分が安定する／イライラが減る内容を選ぼう。',
+    '🙂 機嫌':'気分が安定する／イライラが減る内容を選ぼう。',
+    '⏰ 生活リズム':'決まった時間に寝起きできる内容を選ぼう。',
+    '▶︎ インタラクティブ':'動画やアプリで学びやすくなる内容を選ぼう。',
+    '🌱 環境':'紙の節約など環境にやさしい内容を選ぼう。',
+    '🗂 整理':'ノートの整理・検索がしやすい内容を選ぼう。',
+    '🎯 個別学習':'自分のレベルに合った練習ができる内容を選ぼう。',
+    '🍽 食べ過ぎ防止':'あとで食べ過ぎない・間食が減る内容を選ぼう。'
+  };
+
   /* ====== Helpers ====== */
   const $ = s => document.querySelector(s);
   const el = (t,c) => { const e=document.createElement(t); if(c) e.className=c; return e; };
   const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
   const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,'');
-  const esc = s => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); 
+  const esc = s => String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
   function sampleDistinct(arr, n){ const a=[...arr], out=[]; while(out.length<n && a.length){ out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]); } return out; }
 
   /* ====== State ====== */
@@ -330,7 +352,7 @@
 
   function renderExampleUI(q, bank){
     const block = $('#exampleBlock'), wrap = $('#exampleArea'); wrap.innerHTML='';
-    if(!q.confirmedStep1){ block.style.display='none'; return; }   // ← ここがポイント
+    if(!q.confirmedStep1){ block.style.display='none'; return; }
     block.style.display='grid';
     bank.examples.forEach(ex=>{
       const chip = el('button','chip'); chip.type='button';
@@ -350,17 +372,20 @@
     $('#exampleMsg').textContent='';
   }
 
-  /* PREVIEW（下）：選択部分を太字 */
+  /* PREVIEW（下）：選択部分を太字＋二重ピリオド防止 */
   function updatePreview(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
     const t0 = bank.topic;
     const rObj = q.pickedReason ? bank.reasons.find(x=>x.id===q.pickedReason) : null;
-    const rTxt = rObj ? `<b>${esc(rObj.text)}</b>` : '—';
+    const stripEnd = s => (s||'').replace(/[.。．]\s*$/,'');
+    const rTxt = rObj ? `<b>${esc(stripEnd(rObj.text))}</b>` : '—';
+
     let html = `<b>Preview:</b><br>${ensurePeriod(`First, ${esc(cleanEnd(t0))} because ${rTxt}`)}`;
+
     if(q.confirmedStep1){
       const exObj = q.pickedExample ? bank.examples.find(x=>x.id===q.pickedExample) : null;
-      const exTxt = exObj ? `<b>${esc(exObj.text)}</b>` : '—';
+      const exTxt = exObj ? `<b>${esc(stripEnd(exObj.text))}</b>` : '—';
       html += `<br>${ensurePeriod(`For example, ${exTxt}`)}`;
     }
     $('#previewText').innerHTML = html;
@@ -452,8 +477,10 @@
     }else{
       const belongTo = bank.reasons.find(r=>r.exId===q.pickedExample);
       const current  = bank.reasons.find(r=>r.id===q.pickedReason);
+      const hint = HINT_BY_TAG[current?.tag] || '理由を証明する事実（時間・集中・健康など）に合う例を選ぼう。';
       $('#exampleMsg').className='result bad';
-      $('#exampleMsg').textContent = `その例は「${belongTo?belongTo.tag:'別の理由'}」。今の理由は「${current.tag}」。ヒント：例）${bank.examples.find(e=>e.id===current.exId)?.text}`;
+      $('#exampleMsg').textContent =
+        `その例は「${belongTo?belongTo.tag:'別の理由'}」。今の理由は「${current?.tag}」。ヒント：${hint}`;
     }
     updatePreview(); updatePills(); updateOkButtons();
   }
