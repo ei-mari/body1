@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title> Body 1 ビルダークイズ</title>
+<title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ + TTS）</title>
 <style>
   :root{ --bg:#f7f7fb; --card:#fff; --ink:#0f172a; --muted:#6b7280; --accent:#2563eb; --ring:#93c5fd; --ok:#16a34a; --bad:#dc2626; --radius:16px; }
   *{box-sizing:border-box} html,body{height:100%}
@@ -26,7 +26,7 @@
   .pill.active{background:#2563eb;color:#fff}
   .pill.done{background:#dcfce7;color:#065f46}
   .choice-wrap{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{padding:10px 12px;border:1px solid #e5e7eb;border-radius:999px;cursor:pointer;background:#fff;transition:transform .08s ease, background .15s ease, border-color .15s ease;color:var(--ink)}
+  .chip{padding:10px 12px;border:1px solid #e5e7eb;border-radius:999px;cursor:pointer;background:#fff;transition:transform .08s ease, background .15s ease, border-color .15s ease;color:#111}
   .chip:hover{transform:translateY(-1px)}
   .chip[disabled]{opacity:.55;cursor:not-allowed;transform:none}
   .chip.ok.selected{background:#dcfce7;border-color:#86efac}
@@ -44,10 +44,11 @@
   .topic-subline{display:flex;align-items:center;gap:8px;color:#334155;font-weight:700}
   .topic-subline::before,.topic-subline::after{content:"";flex:1;height:1.5px;background:#e5e7eb;border-radius:999px}
 
-  /* Preview（上に配置） */
-  .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px}
+  /* Preview（下に配置） */
+  .preview{background:#f1f5f9;border-radius:12px;padding:12px;font-size:15px;margin-top:6px}
   .preview-actions{border-top:1px dashed #cbd5e1; margin-top:8px; padding-top:8px; display:flex; align-items:center; gap:12px; flex-wrap:wrap}
   .btn-icon{width:40px;height:40px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;font-size:20px;background:#e5e7eb;color:#111827}
+
   .okwrap{display:none;align-items:center;gap:10px;margin-top:8px}
 
   /* STEP1の理由を表示しながらSTEP2 */
@@ -96,30 +97,6 @@
       <div class="topic-subline"><span>💡 正しい選択肢を選び、適切な <u>Body 1</u> を作ろう。</span></div>
     </div>
 
-    <!-- PREVIEW（上） -->
-    <div class="row" style="margin-top:10px">
-      <div class="preview">
-        <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
-        <div class="preview-actions">
-          <button id="btn-tts" class="btn-icon" aria-label="読み上げ">🎧</button>
-          <details><summary>▶︎ オプション</summary>
-            <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
-          </details>
-          <small id="ttsNote" class="muted"></small>
-        </div>
-      </div>
-      <!-- OK（STEP1確認） -->
-      <div class="okwrap" id="okWrap1">
-        <span class="muted">これでいい？</span>
-        <button id="btn-ok1" class="primary" disabled>OK（STEP 2へ）</button>
-      </div>
-      <!-- OK（STEP2確認 次へ） -->
-      <div class="okwrap" id="okWrap2">
-        <span class="muted">完成！</span>
-        <button id="btn-ok2" class="primary" disabled>OK（次へ）</button>
-      </div>
-    </div>
-
     <!-- STEP1 理由 -->
     <div id="reasonBlock" class="row" style="margin-top:8px">
       <div id="reasonArea" class="choice-wrap"></div>
@@ -138,7 +115,28 @@
       <div id="exampleMsg" class="muted"></div>
     </div>
 
-    <div class="row"><div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div></div>
+    <!-- Preview（下）＋ OKボタン群 -->
+    <div class="row" id="previewBlock">
+      <div class="preview">
+        <div id="previewText"><b>Preview:</b><br>First, — because —.</div>
+        <div class="preview-actions">
+          <button id="btn-tts" class="btn-icon" aria-label="読み上げ">🎧</button>
+          <details><summary>▶︎ オプション</summary>
+            <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
+          </details>
+          <small id="ttsNote" class="muted"></small>
+        </div>
+      </div>
+      <div class="okwrap" id="okWrap1">
+        <span class="muted">これでいい？</span>
+        <button id="btn-ok1" class="primary" disabled>OK（STEP 2へ）</button>
+      </div>
+      <div class="okwrap" id="okWrap2">
+        <span class="muted">答え合わせ：</span>
+        <button id="btn-ok2" class="primary" disabled>OK（次へ）</button>
+      </div>
+      <div id="result" class="muted">STEP 1 → STEP 2 の順に完成させよう</div>
+    </div>
   </div>
 
   <div class="hr"></div>
@@ -332,26 +330,42 @@
     bank.examples.forEach(ex=>{
       const chip = el('button','chip'); chip.type='button';
       chip.textContent = ex.text;
+      if(q.pickedExample === ex.id) chip.classList.add('selected');
       if(q.exampleCorrect) chip.disabled = true;
-      chip.addEventListener('click', ()=> onPickExample(ex.id, chip));
+      chip.addEventListener('click', ()=>{
+        if(q.exampleCorrect) return;
+        q.pickedExample = ex.id;
+        $('#exampleArea').querySelectorAll('.chip').forEach(b=>b.classList.remove('selected'));
+        chip.classList.add('selected');
+        $('#exampleMsg').textContent=''; // まだ判定しない
+        updatePreview(); updateOkButtons();
+      });
       wrap.appendChild(chip);
     });
     $('#exampleMsg').textContent='';
   }
 
-  /* PREVIEW（STEP1=1文, STEP2=2文） */
+  /* PREVIEW（下）：選択部分を太字に */
   function updatePreview(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
+
     const t0 = bank.topic;
-    const r0 = q.pickedReason ? bank.reasons.find(x=>x.id===q.pickedReason).text : '—';
-    const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
-    let html = `<b>Preview:</b><br>${s1}`;
+    const rObj = q.pickedReason ? bank.reasons.find(x=>x.id===q.pickedReason) : null;
+    const rTxt = rObj ? `<b>${escapeHTML(rObj.text)}</b>` : '—';
+    const s1 = `First, ${escapeHTML(cleanEnd(t0))} because ${rTxt}`;
+    let html = `<b>Preview:</b><br>${ensurePeriod(s1)}`;
+
     if(q.confirmedStep1){
-      const ex = q.pickedExample ? bank.examples.find(x=>x.id===q.pickedExample).text : '—';
-      html += `<br>${ensurePeriod(`For example, ${ex}`)}`;
+      const exObj = q.pickedExample ? bank.examples.find(x=>x.id===q.pickedExample) : null;
+      const exTxt = exObj ? `<b>${escapeHTML(exObj.text)}</b>` : '—';
+      html += `<br>${ensurePeriod(`For example, ${exTxt}`)}`;
     }
     $('#previewText').innerHTML = html;
+  }
+
+  function escapeHTML(s){
+    return String(s).replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
   }
 
   /* STEP pills */
@@ -447,7 +461,7 @@
       $('#reasonMsg').className='result ok';
       $('#reasonMsg').textContent='✅ 正解！STEP 2 へ進もう';
       updateStepVisibility(); renderExampleUI(q, bank);
-      setTimeout(()=> document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'}), 30);
+      document.getElementById('exampleBlock').scrollIntoView({behavior:'smooth', block:'center'});
     }else{
       q.reasonCorrect=false; q.confirmedStep1=false;
       $('#reasonMsg').className='result bad';
@@ -456,23 +470,23 @@
     updatePreview(); updatePills(); updateOkButtons();
   }
 
-  function onPickExample(exId, chip){
+  function confirmStep2(){
     const q = state.questions[state.step];
     const bank = BANK[q.topic];
+    if(!q.pickedExample) return;
     const must = bank.reasons.find(r=>r.id===q.pickedReason)?.exId;
-    q.pickedExample = exId;
-    const ok = (exId === must);
+    const ok = (q.pickedExample === must);
     if(ok){
       q.exampleCorrect = true;
-      document.querySelectorAll('#exampleArea .chip').forEach(b=>{ b.disabled = true; });
-      chip.classList.add('ok','selected');
-      $('#exampleMsg').className='result ok';
-      $('#exampleMsg').textContent='✅ 正解！OKで次へ';
       if(!(q._scored)) { q._scored = true; state.score += 1; }
-    } else {
-      flashBad(chip);
+      $('#exampleMsg').className='result ok';
+      $('#exampleMsg').textContent='✅ 正解！次の問題へすすむよ';
+      renderAnswersList();
+      setTimeout(()=> nextQuestion(), 900);
+    }else{
       $('#exampleMsg').className='result bad';
-      $('#exampleMsg').textContent=explainWrongExample(q.topic, q.pickedReason, exId);
+      $('#exampleMsg').textContent=explainWrongExample(q.topic, q.pickedReason, q.pickedExample);
+      // 不正解でもチップは残したまま・再選択可（正解は表示しない）
     }
     updatePreview(); updatePills(); updateOkButtons();
   }
@@ -487,15 +501,15 @@
     // STEP1 OK
     const w1 = $('#okWrap1'), b1 = $('#btn-ok1');
     if(q.pickedReason && !q.confirmedStep1){ w1.style.display='flex'; b1.disabled=false; } else { w1.style.display='none'; b1.disabled=true; }
-    // STEP2 OK
+    // STEP2 OK（選択済みかつ未判定/未正解のとき表示）
     const w2 = $('#okWrap2'), b2 = $('#btn-ok2');
-    if(q.confirmedStep1 && q.exampleCorrect){ w2.style.display='flex'; b2.disabled=false; } else { w2.style.display='none'; b2.disabled=true; }
+    if(q.confirmedStep1 && q.pickedExample && !q.exampleCorrect){ w2.style.display='flex'; b2.disabled=false; } else { w2.style.display='none'; b2.disabled=true; }
   }
 
   /* 初期化・バインド */
   initQuestions(); render();
   $('#btn-ok1').addEventListener('click', confirmStep1);
-  $('#btn-ok2').addEventListener('click', nextQuestion);
+  $('#btn-ok2').addEventListener('click', confirmStep2);
 
   function updateBar(done=false){ const pct = done ? 100 : (state.step / state.questions.length) * 100; $('#bar').style.width = pct + '%'; }
   function resetAll(){ initQuestions(); render(); updateBar(); }
