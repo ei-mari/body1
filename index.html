@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ）</title>
+  <title>Part 2 | Body 1 ビルダー（理由→たとえば クイズ + TTS）</title>
   <style>
     :root{
       --bg:#f7f7fb; --card:#ffffff; --ink:#111827; --muted:#6b7280;
@@ -35,6 +35,13 @@
     .topic{font-weight:700; font-size:18px;}
     .badge{display:inline-flex; align-items:center; gap:6px; background:#e0e7ff; color:#3730a3; font-weight:700; padding:4px 10px; border-radius:999px; font-size:12px}
 
+    .helper{background:#eef2ff; border:1px dashed #c7d2fe; color:#1e293b; padding:10px 12px; border-radius:12px; font-size:14px}
+    .helper ol{margin:6px 0 0 18px; padding:0}
+    .helper li{margin:4px 0}
+
+    .step-title{display:flex; align-items:center; gap:8px; font-weight:700}
+    .step-pill{background:#e5e7eb; color:#111827; font-weight:700; padding:2px 10px; border-radius:999px; font-size:12px}
+
     .choice-wrap{display:flex; flex-wrap:wrap; gap:8px}
     .chip{
       padding:10px 12px; border:1px solid #e5e7eb; border-radius:999px;
@@ -46,13 +53,22 @@
 
     .preview{background:#f1f5f9; border-radius:12px; padding:12px; font-size:15px}
     .preview b{color:#0f172a}
+
+    .tts{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
+    .tts small{color:var(--muted)}
+    .tts input[type=range]{width:160px}
+
     .footer{display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:10px}
     .result{display:flex; align-items:center; gap:8px; font-weight:700}
     .result.ok{color:var(--ok)} .result.bad{color:var(--bad)}
     .copy-area{white-space:pre-wrap; background:#0b1020; color:#e2e8f0; padding:12px; border-radius:12px; font-size:14px}
 
+    @media (min-width: 760px){
+      .choice-wrap{gap:10px}
+      .chip{padding:12px 14px}
+    }
     @media print{
-      header,.toolbar,.footer{display:none!important}
+      header,.toolbar,.footer,.tts{display:none!important}
       body{background:#fff} .card{box-shadow:none; border:1px solid #e5e7eb}
     }
   </style>
@@ -75,28 +91,46 @@
 
       <div class="hr"></div>
 
-      <div class="row">
+      <!-- やること案内 -->
+      <div class="helper">
+        <b>やること</b>
+        <ol>
+          <li><b>トピック</b>を読み、正しい<b>理由（1〜5）</b>を1つ選ぶ。</li>
+          <li>その理由に合う<b>たとえば（i〜v）</b>を1つ選ぶ。</li>
+          <li>下の<b>Preview</b>を<span style="font-weight:700">きく</span>（🔊）→ 声に出して読んでみる。</li>
+        </ol>
+      </div>
+
+      <div class="row" style="margin-top:10px">
         <div class="topic" id="topicText"></div>
       </div>
 
       <div class="row" style="margin-top:6px">
-        <div style="font-weight:700; margin-bottom:4px">① 適切な <u>理由（1〜5）</u> を選ぼう</div>
+        <div class="step-title"><span class="step-pill">STEP 1</span> 適切な <u>理由（1〜5）</u> を選ぼう</div>
         <div id="reasonArea" class="choice-wrap"></div>
         <div id="reasonMsg" class="result muted">選択するとすぐ判定します</div>
       </div>
 
       <div class="row" id="exampleBlock" style="margin-top:8px; display:none">
-        <div style="font-weight:700; margin-bottom:4px">② その理由に合う <u>たとえば（i〜v）</u> を選ぼう</div>
+        <div class="step-title"><span class="step-pill">STEP 2</span> その理由に合う <u>たとえば（i〜v）</u> を選ぼう</div>
         <div id="exampleArea" class="choice-wrap"></div>
         <div id="exampleMsg" class="result muted">選択するとすぐ判定します</div>
       </div>
 
       <div class="row" style="margin-top:10px">
         <div class="preview" id="preview"><b>Preview:</b><br>First, — because —.<br>For example, —.</div>
+        <div class="tts" id="ttsWrap">
+          <button id="btn-speak" class="secondary">🔊 再生</button>
+          <button id="btn-pause" class="secondary">⏸ 一時停止</button>
+          <button id="btn-resume" class="secondary">▶ 再開</button>
+          <button id="btn-stop" class="secondary">⏹ 停止</button>
+          <label class="muted">速度 <input id="rate" type="range" min="0.7" max="1.3" step="0.1" value="1"></label>
+          <small id="ttsNote" class="muted"></small>
+        </div>
       </div>
 
       <div class="footer">
-        <div id="result" class="result muted">理由→たとえば の順に正解しよう</div>
+        <div id="result" class="result muted">STEP 1 → STEP 2 の順に正解しよう</div>
         <button id="btn-randTopic" class="secondary" title="この問だけ別トピックに">🎲 別トピック</button>
         <button id="btn-next" class="ghost" disabled>次へ →</button>
       </div>
@@ -122,7 +156,7 @@
       presetTopics: ['A','C','E']
     };
 
-    // URLの ?topics=A,C,E でプリセット出題、?ui=dropdown でプルダウンUI
+    // URL: ?topics=A,C,E でプリセット出題、?ui=dropdown でプルダウンUI
     (function(){
       const sp = new URLSearchParams(location.search);
       const m = sp.get('topics');
@@ -139,7 +173,6 @@
       { key:'D', text:'Using tablets in class is helpful.' },
       { key:'E', text:'Eating breakfast is important.' },
     ];
-
     const reasons = [
       { key:'1', text:'it helps us focus.' },
       { key:'2', text:'it gives us more energy.' },
@@ -147,7 +180,6 @@
       { key:'4', text:'it keeps us healthy.' },
       { key:'5', text:'it speeds up research.' },
     ];
-
     const examples = [
       { key:'i',  text:'I/we can listen well in class.' },
       { key:'ii', text:'I don’t feel sleepy in the morning.' },
@@ -170,7 +202,7 @@
     const $ = sel => document.querySelector(sel);
     const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
     const ensurePeriod = s => s.trim().replace(/[。．]$/,'').replace(/\.+$/,'') + '.';
-    const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,''); // 末尾のピリオドや句点を除去
+    const cleanEnd = s => (s||'').replace(/[.。．]\s*$/,''); // 末尾のピリオド等を除去
     function sampleDistinct(arr, n){ const copy=[...arr]; const out=[]; while(out.length<n && copy.length){ out.push(copy.splice(Math.floor(Math.random()*copy.length),1)[0]); } return out; }
 
     // ====== State ======
@@ -204,7 +236,7 @@
       updatePreview();
 
       $('#result').className = 'result muted';
-      $('#result').textContent = '理由→たとえば の順に正解しよう';
+      $('#result').textContent = 'STEP 1 → STEP 2 の順に正解しよう';
       $('#btn-next').disabled = !(q.reasonCorrect && q.exampleCorrect);
     }
 
@@ -260,7 +292,9 @@
       const q = state.questions[state.step];
       const t0 = topics.find(x=>x.key===q.topic).text;
       const r0 = q.pickedReason ? reasons.find(x=>x.key===q.pickedReason).text : '—';
-      const ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
+      let ex = q.pickedExample ? examples.find(x=>x.key===q.pickedExample).text : '—';
+      // TTSで自然にするため i) の "I/we" は "I" に変換
+      if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
       const s1 = ensurePeriod(`First, ${cleanEnd(t0)} because ${cleanEnd(r0)}`);
       const s2 = ensurePeriod(`For example, ${ex}`);
       $('#preview').innerHTML = `<b>Preview:</b><br>${s1}<br>${s2}`;
@@ -330,7 +364,8 @@
         if(!(q.reasonCorrect && q.exampleCorrect)) return null;
         const t = topics.find(x=>x.key===q.topic).text;
         const r = reasons.find(x=>x.key===q.pickedReason).text;
-        const ex = examples.find(x=>x.key===q.pickedExample).text;
+        let ex = examples.find(x=>x.key===q.pickedExample).text;
+        if(ex && ex.startsWith('I/we')) ex = ex.replace('I/we','I');
         const s1 = ensurePeriod(`First, ${cleanEnd(t)} because ${cleanEnd(r)}`);
         const s2 = ensurePeriod(`For example, ${ex}`);
         return `Q${i+1}\n${s1}\n${s2}`;
@@ -339,6 +374,34 @@
     }
 
     function resetAll(){ initQuestions(); render(); updateAnswersBox(); }
+
+    // ====== TTS ======
+    const tts = {
+      supported: 'speechSynthesis' in window,
+      utterance: null,
+      get rate(){ return parseFloat($('#rate').value || '1'); },
+      speak(text){
+        if(!this.supported) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'en-US';
+        u.rate = this.rate;
+        const voices = window.speechSynthesis.getVoices();
+        const v = voices.find(v=>/en-|English/.test(v.lang||v.name));
+        if(v) u.voice = v;
+        this.utterance = u;
+        window.speechSynthesis.speak(u);
+      },
+      pause(){ this.supported && window.speechSynthesis.pause(); },
+      resume(){ this.supported && window.speechSynthesis.resume(); },
+      stop(){ this.supported && window.speechSynthesis.cancel(); }
+    };
+
+    function previewText(){
+      // Previewの英語だけを読み上げ
+      const lines = $('#preview').innerText.replace(/^Preview:\s*/,'').trim();
+      return lines;
+    }
 
     // ====== Init ======
     initQuestions();
@@ -350,6 +413,19 @@
     $('#btn-reset').addEventListener('click', resetAll);
     $('#btn-print').addEventListener('click', ()=> window.print());
     $('#btn-copy').addEventListener('click', ()=>{ const txt = $('#answers').textContent.trim(); if(!txt) return; navigator.clipboard.writeText(txt); });
+
+    // TTS controls
+    if(tts.supported){
+      $('#btn-speak').addEventListener('click', ()=> tts.speak(previewText()));
+      $('#btn-pause').addEventListener('click', ()=> tts.pause());
+      $('#btn-resume').addEventListener('click', ()=> tts.resume());
+      $('#btn-stop').addEventListener('click', ()=> tts.stop());
+      window.speechSynthesis.onvoiceschanged = () => {}; // 一部ブラウザで必要
+      $('#ttsNote').textContent = '';
+    } else {
+      $('#ttsNote').textContent = '（お使いのブラウザは音声読み上げに対応していません）';
+      ['btn-speak','btn-pause','btn-resume','btn-stop','rate'].forEach(id=>{ const n=$('#'+id); if(n) n.disabled=true; });
+    }
   </script>
 </body>
 </html>
